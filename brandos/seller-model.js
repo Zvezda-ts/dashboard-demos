@@ -1,0 +1,22 @@
+(function(root){
+ 'use strict';
+ function create(skus,unit){
+  const copy=x=>JSON.parse(JSON.stringify(x));
+  const initial=()=>({version:3,supplies:[{id:1,art:skus[0].art,qty:30,warehouse:0,eta:'2026-11-05',status:'transit',baseline:true}],campaigns:skus.map((s,i)=>({art:s.art,budget:[1000,800,300,600][i],bid:[20,18,10,15][i],active:i!==0&&i!==2})),prices:{},promos:{},log:[],seq:2});
+  function validateNum(v,min,max){return Number.isFinite(+v)&&+v>=min&&+v<=max;}
+  const sku=art=>{const s=skus.find(s=>s.art===art);if(!s)throw Error('Товар не найден');return s;};
+  function stock(st,art){const s=sku(art),received=st.supplies.filter(x=>x.art===art&&x.status==='received').reduce((a,x)=>a+x.qty,0),baseline=st.supplies.filter(x=>x.art===art&&x.baseline&&x.status!=='transit'&&x.status!=='received').reduce((a,x)=>a+x.qty,0);return{available:s.wh.reduce((a,b)=>a+b,0)+received,transit:st.supplies.filter(x=>x.art===art&&x.status==='transit').reduce((a,x)=>a+x.qty,0),days:s.perDay>0?(s.wh.reduce((a,b)=>a+b,0)+received)/s.perDay:null};}
+  function economics(art,price){const s=sku(art);if(!validateNum(price,.01,10000000))throw Error('Цена должна быть больше нуля');const p=unit({...s,price:+price,disc:0}),k=(s.comm+unit(s).tax/unit(s).sp*100)/100,base=unit(s).costs.reduce((a,x)=>a+x[1],0)-unit(s).comm-unit(s).tax;return{...p,floor:k<1?base/(1-k):null};}
+  function currentPrice(st,art){return st.prices[art]??unit(sku(art)).sp;}
+  function log(st,text){st.log.unshift({n:st.seq++,text});}
+  function supply(st,art,qty,warehouse,eta){const s=sku(art);if(!Number.isInteger(+qty)||+qty<1||+qty>100000)throw Error('Количество: целое число от 1 до 100000');if(!Number.isInteger(+warehouse)||+warehouse<0||+warehouse>=s.wh.length)throw Error('Выберите склад');if(!/^2026-(11|12)-\d{2}$/.test(eta)||isNaN(new Date(eta+'T12:00:00').valueOf())||new Date(eta+'T12:00:00').toISOString().slice(0,10)!==eta)throw Error('Дата поставки: ноябрь или декабрь 2026');const x={id:st.seq++,art,qty:+qty,warehouse:+warehouse,eta,status:'draft'};st.supplies.push(x);log(st,'Создан черновик поставки: '+s.n+', '+qty+' шт.');return x;}
+  function advance(st,id){const x=st.supplies.find(x=>x.id===id);if(!x)throw Error('Поставка не найдена');const next={draft:'transit',transit:'received'}[x.status];if(!next)throw Error('Поставка уже принята');x.status=next;log(st,(next==='received'?'Приёмка в сценарии: ':'Отправка в сценарии: ')+sku(x.art).n+', '+x.qty+' шт.');}
+  function changeCampaign(st,art,budget,bid,active,eligible){const c=st.campaigns.find(x=>x.art===art);if(!c)throw Error('Кампания не найдена');if(!validateNum(budget,0,100000)||!validateNum(bid,.01,10000)||Math.round(+budget*100)!==+budget*100)throw Error('Проверьте бюджет и ставку');if(active&&+budget<=0)throw Error('Для запуска нужен положительный бюджет');if(active&&!eligible&&(active!==c.active||+budget>c.budget||+bid>c.bid))throw Error('Запуск и увеличение заблокированы: сначала устраните ограничения товара');Object.assign(c,{budget:+budget,bid:+bid,active:!!active});log(st,'Реклама: '+sku(art).n+', '+(active?'включена':'пауза')+', лимит '+budget+' ₽/день, ставка '+bid+' ₽.');}
+  function promo(st,art,price,enabled){sku(art);if(enabled){const u=economics(art,price);if(u.profit<0)throw Error('Акция заблокирована: вклад с продажи отрицательный');if(stock(st,art).available<=0)throw Error('Нет доступного товара');st.promos[art]={price:+price,enabled:true};}else st.promos[art]={...(st.promos[art]||{}),enabled:false};log(st,'Акция: '+sku(art).n+', '+(enabled?'участие по цене '+price+' ₽':'участие отменено')+'.');}
+  function setPrice(st,art,price){const u=economics(art,price);if(u.profit<0)throw Error('Цена ниже безубыточной в этой модели');if(st.promos[art]?.enabled)throw Error('Сначала отмените участие в акции');st.prices[art]=+price;log(st,'Цена продавца: '+sku(art).n+' — '+price+' ₽.');}
+  // Synthetic observations, not marketplace accounting or a prediction of platform discounts.
+  function history(art){const s=sku(art),p=unit(s).sp;return Array.from({length:7},(_,i)=>{const discount=Math.max(0,Math.min(60,s.spp+[3,2,4,1,0,-3,0][i]));return{date:'2026-10-'+(25+i),seller:p,buyer:p*(1-discount/100),discount};});}
+  return{initial,stock,economics,currentPrice,supply,advance,changeCampaign,promo,setPrice,history,copy};
+ }
+ root.BrandSellerModel={create};if(typeof module!=='undefined')module.exports=root.BrandSellerModel;
+})(typeof globalThis!=='undefined'?globalThis:this);

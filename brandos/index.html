@@ -1,0 +1,1706 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BrandOS · демо v3</title>
+<!-- Шрифт Inter лежит рядом в папке fonts/ (лицензия OFL), с серверов Google ничего не грузится -->
+<style>
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:100 900;src:url(fonts/inter-cyrillic-ext-wght-normal.woff2) format('woff2');unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:100 900;src:url(fonts/inter-cyrillic-wght-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:100 900;src:url(fonts/inter-latin-ext-wght-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:100 900;src:url(fonts/inter-latin-wght-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+</style>
+<style>
+:root{
+  /* тема «графит + лайм» по референсу */
+  --bg:#101215; --bg2:#1a1d21; --panel:#1b1e22; --panel2:#24282d; --line:#2a2e34; --line2:#3a3f46;
+  --text:#f3f4f2; --muted:#8f949b; --dim:#62676e;
+  --lime:#b8f229; --lime2:#a3e01a; --ink:#111316;
+  --blue:var(--lime); --violet:#e6e8e3; --cyan:var(--lime); --green:#7fdc5a; --red:#ff6b6b; --amber:#ffc24b;
+  --grad:linear-gradient(135deg,#c6f74c 0%,#a6e31c 100%);
+  --glow:0 0 0 1px rgba(184,242,41,.35),0 8px 30px rgba(184,242,41,.10);
+  --r:26px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(1000px 500px at 85% -15%,rgba(184,242,41,.05),transparent 60%),var(--bg);min-height:100vh}
+a{color:var(--cyan);text-decoration:none}
+button{font-family:inherit;font-size:13px;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:13px;background:var(--bg2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 11px;outline:none;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(184,242,41,.18)}
+.num{font-variant-numeric:tabular-nums}
+
+/* layout */
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.side{position:sticky;top:0;height:100vh;background:#0d0f12;backdrop-filter:blur(10px);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:6px;z-index:40}
+.logo{display:flex;align-items:center;gap:10px;padding:4px 8px 18px;font-weight:800;font-size:18px;letter-spacing:-.3px}
+.logo i{width:30px;height:30px;border-radius:9px;background:var(--grad);box-shadow:0 0 18px rgba(184,242,41,.55);display:grid;place-items:center;font-style:normal;font-size:14px}
+.nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:var(--muted);font-weight:500;transition:.15s}
+.nav a svg{width:18px;height:18px;flex:none}
+.nav a:hover{background:var(--panel);color:var(--text)}
+.nav a.on{background:linear-gradient(90deg,rgba(184,242,41,.20),rgba(184,242,41,.08));color:#fff;box-shadow:inset 2px 0 0 var(--blue)}
+.nav .cnt{margin-left:auto;font-size:11px;background:var(--violet);color:#fff;border-radius:20px;padding:1px 7px}
+.side .spacer{flex:1}
+.ai-btn{display:flex;align-items:center;gap:10px;justify-content:center;width:100%;padding:12px;border:0;border-radius:12px;background:var(--grad);color:#fff;font-weight:600;box-shadow:0 6px 24px rgba(184,242,41,.35)}
+.side-foot{font-size:11px;color:var(--dim);padding:10px 8px 0}
+[data-acc]{display:none}
+.main{padding:22px 28px 60px;min-width:0}
+.burger{display:none}
+
+/* header */
+.top{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.top h1{margin:0;font-size:22px;letter-spacing:-.4px}
+.top .sub{color:var(--muted);font-size:13px;margin-top:3px}
+.search{position:relative;margin-left:auto;width:300px;max-width:100%}
+.search input{padding-left:34px;background:var(--panel)}
+.search svg{position:absolute;left:11px;top:10px;width:15px;height:15px;color:var(--dim)}
+.sres{position:absolute;top:44px;left:0;right:0;background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:6px;display:none;z-index:30;max-height:320px;overflow:auto;box-shadow:0 20px 40px rgba(0,0,0,.4)}
+.sres.show{display:block}
+.sres div{padding:8px 10px;border-radius:8px;cursor:pointer}
+.sres div:hover{background:var(--panel)}
+.sres small{color:var(--muted);display:block;font-size:11px}
+.sources{display:flex;gap:6px;flex-wrap:wrap}
+.src{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);background:var(--panel);border:1px solid var(--line);padding:5px 9px;border-radius:20px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px currentColor;color:var(--amber)}
+.dot.ok{background:var(--green);color:var(--green)} .dot.off{background:var(--dim);color:transparent;box-shadow:none}
+
+/* cards */
+.card{background:linear-gradient(180deg,#1d2024,#1a1d21);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;position:relative}
+.card h3{margin:0 0 12px;font-size:13px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:8px;text-transform:none}
+.card h3 .r{margin-left:auto;font-weight:500;font-size:12px}
+.demo{font-size:10px;font-weight:600;letter-spacing:.4px;color:var(--amber);border:1px solid rgba(255,182,72,.35);border-radius:6px;padding:1px 5px}
+.grid{display:grid;gap:14px}
+.kpis{grid-template-columns:repeat(4,1fr)}
+.kpi .v{font-size:26px;font-weight:700;letter-spacing:-.6px;margin:2px 0 6px}
+.kpi .d{font-size:12px;color:var(--muted)}
+.up{color:var(--green)} .down{color:var(--red)}
+.kpi:before{content:"";position:absolute;inset:0 0 auto 0;height:2px;border-radius:14px 14px 0 0;background:var(--grad);opacity:.7}
+.spark{position:absolute;right:14px;top:16px;width:80px;height:30px}
+.home{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;margin-top:14px}
+.grid>*,.home>*{min-width:0}
+.dec>div{min-width:0}
+.two{grid-template-columns:1.6fr 1fr}
+.minis{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.mini .v{font-size:20px;font-weight:700;margin-bottom:4px}
+.mini .row{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:3px 0}
+.mini .row b{color:var(--text);font-weight:500}
+.bar{height:10px;border-radius:10px;background:var(--bg2);overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:var(--grad);border-radius:10px;box-shadow:0 0 14px rgba(184,242,41,.6)}
+.plan{display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.plan .bar{flex:1;min-width:200px;height:14px}
+.plan .marker{position:relative}
+.ch{display:grid;grid-template-columns:70px 1fr 50px;gap:10px;align-items:center;font-size:12px;margin:9px 0}
+.ch .bar{height:8px}
+.list .it{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:13px;align-items:flex-start}
+.list .it:first-of-type{border-top:0}
+.list .it small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.ic{width:28px;height:28px;flex:none;border-radius:8px;display:grid;place-items:center;font-size:13px;background:rgba(184,242,41,.15);color:var(--cyan)}
+.ic.red{background:rgba(255,92,122,.14);color:var(--red)} .ic.amb{background:rgba(255,182,72,.14);color:var(--amber)} .ic.grn{background:rgba(47,209,139,.14);color:var(--green)} .ic.vio{background:rgba(184,242,41,.16);color:#d6f78f}
+.qa{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{border:1px solid var(--line2);background:var(--panel2);color:var(--text);border-radius:10px;padding:9px 12px;font-weight:500;transition:.15s}
+.btn:hover{border-color:var(--blue);box-shadow:var(--glow)}
+.btn.pri{background:var(--grad);border:0;color:#fff}
+.btn.ghost{background:transparent}
+.btn.sm{padding:6px 10px;font-size:12px}
+.btn.g{border-color:rgba(47,209,139,.4);color:var(--green)} .btn.rd{border-color:rgba(255,92,122,.4);color:var(--red)}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:var(--bg2);border:1px solid var(--line);color:var(--muted)}
+.tag.hi{color:var(--red);border-color:rgba(255,92,122,.35)} .tag.mid{color:var(--amber);border-color:rgba(255,182,72,.35)} .tag.lo{color:var(--green);border-color:rgba(47,209,139,.35)}
+.tag.ai{color:#d6f78f;border-color:rgba(184,242,41,.5);background:rgba(184,242,41,.12)}
+.chart{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;font-size:11px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.tip{position:fixed;pointer-events:none;background:#26292e;border:1px solid var(--line2);padding:7px 10px;border-radius:8px;font-size:12px;z-index:99;display:none;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+
+/* pages */
+.page{display:none}.page.on{display:block;animation:fade .25s}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.toolbar select,.toolbar input{width:auto;min-width:140px}
+.seg{display:inline-flex;flex-wrap:wrap;max-width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{border:0;background:transparent;color:var(--muted);padding:6px 12px;border-radius:8px}
+.seg button.on{background:var(--panel2);color:#fff;box-shadow:inset 0 0 0 1px var(--line2)}
+
+/* kanban */
+.kanban{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(215px,1fr);gap:12px;overflow-x:auto;padding-bottom:10px}
+.col{background:#16191d;border:1px solid var(--line);border-radius:var(--r);padding:12px;min-height:300px;transition:.15s}
+.col.over{border-color:var(--blue);box-shadow:var(--glow)}
+.col h4{margin:0 0 4px;font-size:13px;display:flex;align-items:center;gap:8px}
+.col h4 .c{color:var(--muted);font-weight:500}
+.col .sum{font-size:12px;color:var(--muted);margin-bottom:10px}
+.kc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:9px;cursor:grab;transition:.12s}
+.kc:hover{border-color:var(--line2)}
+.kc.drag{opacity:.4}
+.kc .t{font-weight:600;font-size:13px;margin-bottom:6px;line-height:1.35}
+.kc .m{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--muted)}
+.kc .m .late{color:var(--red)}
+.kc .amt{font-size:15px;font-weight:700;margin:2px 0 6px}
+.kc .mv{margin-left:auto;display:flex;gap:4px}
+.kc .mv button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:6px;padding:1px 7px}
+.av{width:20px;height:20px;border-radius:50%;display:inline-grid;place-items:center;font-size:10px;font-weight:700;background:var(--grad);color:#fff}
+
+/* table */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{font-weight:500;color:var(--muted);text-align:left;padding:10px;border-bottom:1px solid var(--line);font-size:12px;white-space:nowrap}
+.tbl td{padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl tr:hover td{background:rgba(184,242,41,.04)}
+.tbl .r{text-align:right}
+.tw{overflow-x:auto}
+.st{font-size:11px;padding:2px 8px;border-radius:20px}
+.st.ok{background:rgba(47,209,139,.12);color:var(--green)} .st.wait{background:rgba(255,182,72,.12);color:var(--amber)} .st.new{background:rgba(184,242,41,.15);color:var(--cyan)} .st.err{background:rgba(255,92,122,.12);color:var(--red)}
+
+/* decisions */
+.dec{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:start}
+.dec .imp{text-align:right}
+.dec .imp b{display:block;font-size:20px;color:var(--green)}
+.dec .why{color:var(--muted);font-size:13px;line-height:1.5;margin:6px 0 10px}
+.dec .acts{display:flex;gap:8px;flex-wrap:wrap}
+.dec.done{opacity:.55}
+.reason{display:none;gap:8px;margin-top:10px}
+.reason.show{display:flex}
+
+/* integrations */
+.ints{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.int .hd{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.int .lg{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-weight:800;font-size:13px;color:#fff}
+.int p{color:var(--muted);font-size:12px;line-height:1.5;margin:0 0 12px;min-height:36px}
+
+/* modal + drawer */
+.ov{position:fixed;inset:0;background:rgba(5,6,8,.72);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:60;padding:16px}
+.ov.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line2);border-radius:18px;padding:22px;width:480px;max-width:100%;max-height:90vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.modal h2{margin:0 0 16px;font-size:18px}
+.fld{margin-bottom:12px}
+.fld label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mfoot{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:400px;max-width:100%;background:var(--bg2);border-left:1px solid var(--line2);z-index:70;transform:translateX(100%);transition:.25s;display:flex;flex-direction:column;box-shadow:-20px 0 60px rgba(0,0,0,.5)}
+.drawer.show{transform:none}
+.dhead{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.dhead b{font-size:15px}
+.dhead small{color:var(--muted);display:block;font-size:11px}
+.x{margin-left:auto;background:transparent;border:0;color:var(--muted);font-size:20px}
+.msgs{flex:1;overflow:auto;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:88%;padding:10px 13px;border-radius:14px;line-height:1.5;font-size:13px;white-space:pre-line}
+.msg.bot{background:var(--panel);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px}
+.msg.me{background:var(--grad);align-self:flex-end;border-bottom-right-radius:4px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:0 18px 10px}
+.chips button{border:1px solid var(--line2);background:transparent;color:var(--muted);border-radius:20px;padding:5px 10px;font-size:12px}
+.din{display:flex;gap:8px;padding:12px 18px 18px;border-top:1px solid var(--line)}
+.note{font-size:12px;color:var(--muted);background:rgba(255,182,72,.06);border:1px dashed rgba(255,182,72,.35);border-radius:10px;padding:10px 12px;margin-bottom:14px;line-height:1.5}
+.empty{color:var(--dim);font-size:12px;text-align:center;padding:20px 0}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:#26292e;border:1px solid var(--line2);padding:10px 16px;border-radius:12px;opacity:0;transition:.25s;z-index:99;font-size:13px}
+.toast.show{opacity:1;transform:translateX(-50%)}
+
+.tbl tr.click{cursor:pointer}
+.cell{display:inline-block;min-width:74px;padding:3px 8px;border-radius:7px;font-size:12px;text-align:right}
+.c-red{background:rgba(255,92,122,.14);color:var(--red)} .c-amb{background:rgba(255,182,72,.13);color:var(--amber)} .c-grn{background:rgba(47,209,139,.10);color:var(--green)} .c-vio{background:rgba(184,242,41,.15);color:#d6f78f} .c-nil{color:var(--dim)}
+.wf{display:grid;grid-template-columns:150px 1fr 90px;gap:10px;align-items:center;font-size:13px;margin:7px 0}
+.wf .bar{height:12px}
+.wf .bar i.neg{background:linear-gradient(90deg,#ff6b6b,#ff8a5c);box-shadow:none}
+.stack{display:flex;height:16px;border-radius:8px;overflow:hidden;margin:6px 0 14px;border:1px solid var(--line)}
+.stack i{display:block;height:100%}
+.pnl td:first-child{position:sticky;left:0;background:var(--panel)}
+.pnl tr.sum td{font-weight:700;border-top:1px solid var(--line2)}
+.chg{font-size:11px;margin-left:6px}
+
+/* ===== стиль по референсу: таблетки, крупные скругления, тонкие крупные цифры ===== */
+.side{border-right:1px solid var(--line);padding:22px 14px}
+.logo i{background:var(--lime);color:var(--ink);box-shadow:none;border-radius:50%}
+.nav a{border-radius:999px;padding:10px 14px}
+.nav a.on{background:var(--lime);color:var(--ink);box-shadow:none;font-weight:600}
+.nav a.on svg{color:var(--ink)}
+.nav .cnt{background:var(--ink);color:var(--lime)}
+.nav a:not(.on) .cnt{background:var(--lime);color:var(--ink)}
+.ai-btn{background:var(--text);color:var(--ink);border-radius:999px;box-shadow:none}
+.ai-btn:hover{background:var(--lime)}
+.top h1{font-size:34px;font-weight:400;letter-spacing:-1px}
+.card{border-color:var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+.card h3{font-weight:500}
+.kpi:before{display:none}
+.kpi .v{font-size:30px;font-weight:400;letter-spacing:-1px}
+.mini .v{font-weight:400;font-size:22px;letter-spacing:-.5px}
+.dec .imp b{font-weight:500}
+.bar{background:#2a2e34;border:0}
+.bar i{background:var(--lime);box-shadow:none}
+.btn{border-radius:999px;background:var(--panel2);border-color:var(--line2)}
+.btn.pri{background:var(--lime);color:var(--ink);font-weight:600}
+.btn.pri:hover{background:#c9f85a;box-shadow:none}
+.btn:hover{border-color:var(--lime);box-shadow:none}
+input,select,textarea{border-radius:14px}
+.toolbar select,.toolbar input,.search input{border-radius:999px}
+.seg{border-radius:999px;background:var(--bg2)}
+.seg button{border-radius:999px}
+.seg button.on{background:var(--lime);color:var(--ink);box-shadow:none;font-weight:600}
+.src{background:var(--bg2)}
+.ic{border-radius:50%;background:rgba(184,242,41,.12);color:var(--lime)}
+.ic.vio{background:rgba(230,232,227,.08);color:var(--text)}
+.av{background:var(--lime);color:var(--ink)}
+.tag{border-radius:999px}
+.tag.ai{color:var(--lime);border-color:rgba(184,242,41,.45);background:rgba(184,242,41,.08)}
+.st.new{background:rgba(184,242,41,.12);color:var(--lime)}
+.kc{border-radius:18px;background:var(--panel2)}
+.col{border-radius:24px}
+.modal{border-radius:26px}
+.msg.me{background:var(--lime);color:var(--ink)}
+.chips button{border-radius:999px}
+a{color:var(--lime)}
+.demo{border-radius:999px;padding:1px 7px}
+.int .lg{border-radius:50%;box-shadow:none !important}
+.wf .bar i.neg{background:#ff6b6b}
+.dot.ok{background:var(--lime);color:var(--lime)}
+input[type=checkbox]{width:16px;height:16px;padding:0;accent-color:var(--lime)}
+.card h3{flex-wrap:wrap}
+.home .minis{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.store-btn{display:block;width:100%;text-align:left;margin:-6px 0 14px;padding:9px 14px;border-radius:16px;border:1px solid var(--line2);background:var(--panel);color:var(--text);font-weight:600;font-size:14px;line-height:1.3}
+.store-btn:hover{border-color:var(--lime)}
+.store-list{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.store-card{display:flex;flex-direction:column;gap:4px;text-align:left;padding:14px 16px;border-radius:18px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);font-size:13px;line-height:1.45}
+.store-card b{font-size:16px;font-weight:600}
+.store-card .niche{color:var(--lime);font-size:12px}
+.store-card .about{color:var(--muted)}
+.store-card:hover{border-color:var(--lime)}
+.store-card.on{border-color:var(--lime);box-shadow:inset 0 0 0 1px var(--lime)}
+@media (max-width:600px){.store-list{grid-template-columns:1fr}}
+input[type=range]{accent-color:var(--lime);border:0;background:transparent}
+.calcrow{grid-template-columns:1.25fr 1fr}
+@media (max-width:860px){.calcrow{grid-template-columns:1fr}}
+.q3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.q3 b{display:block;font-size:14px;margin-bottom:4px}
+.q3 span{font-size:13px;color:#4c5148;line-height:1.5}
+.adgrid{grid-template-columns:1fr 1fr}
+.adc .hd{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px}
+.adc .hd b{font-size:15px;font-weight:600;display:block}
+.adc .hd small{color:var(--muted);font-size:12px}
+.badge{margin-left:auto;white-space:nowrap;font-size:12px;font-weight:600;padding:5px 12px;border-radius:999px}
+.badge.lime{background:var(--lime);color:var(--ink)} .badge.amb{background:rgba(255,194,75,.15);color:var(--amber)} .badge.red{background:rgba(255,107,107,.14);color:var(--red)} .badge.vio{background:rgba(230,232,227,.1);color:var(--text)}
+.admx{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.admx div{background:var(--bg2);border-radius:14px;padding:9px 11px;font-size:11px;color:var(--muted)}
+.admx b{display:block;font-size:15px;font-weight:500;color:var(--text);margin-top:3px}
+.admx small{display:block;font-size:11px;color:var(--dim)}
+.chk{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chk span{font-size:12px;padding:4px 10px;border-radius:999px;background:var(--bg2)}
+.chk .ok{color:var(--lime)} .chk .no{color:var(--red)}
+.strat{font-size:13px;line-height:1.55;color:var(--text);background:rgba(184,242,41,.06);border-radius:14px;padding:10px 12px;margin-bottom:12px}
+.strat b{color:var(--lime)}
+.fmts{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.fmts b{display:block;font-size:13px;margin-bottom:4px}
+.fmts span{font-size:12px;color:var(--muted);line-height:1.5}
+.cgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.cgrid label{font-size:12px;color:var(--muted)}
+.cgrid label input,.cgrid label select{margin-top:5px}
+.bign{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.bign div{background:var(--bg2);border-radius:16px;padding:12px 14px;font-size:12px;color:var(--muted)}
+.bign b{display:block;font-size:22px;font-weight:400;color:var(--text);margin-top:4px}
+.trow{display:grid;grid-template-columns:70px 1fr 110px;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line);font-size:13px}
+.trow:first-child{border-top:0}
+@media (max-width:1100px){.adgrid{grid-template-columns:1fr}.fmts{grid-template-columns:1fr 1fr}}
+@media (max-width:860px){.q3{grid-template-columns:1fr}.admx{grid-template-columns:1fr 1fr}.cgrid{grid-template-columns:1fr 1fr}.fmts{grid-template-columns:1fr}.bign{grid-template-columns:1fr 1fr}}
+.cookie{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);width:min(720px,calc(100% - 32px));z-index:98;display:none;gap:16px;align-items:center;background:#f2f3ef;color:var(--ink);border-radius:20px;padding:14px 16px 14px 20px;font-size:13px;line-height:1.5;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+.cookie.show{display:flex}
+.cookie a{color:var(--ink);text-decoration:underline}
+.cookie .ckb{display:flex;gap:8px;flex:none}
+.cookie .btn{background:#e2e4dc;border-color:#d3d6cc;color:var(--ink)}
+.cookie .btn.pri{background:var(--ink);color:var(--lime);border:0}
+.side-foot a{color:var(--muted);text-decoration:underline}
+@media (max-width:640px){.cookie{flex-direction:column;align-items:stretch}.cookie .ckb{flex-direction:column}}
+.lead-btn{width:100%;padding:11px 12px;margin-bottom:8px;border-radius:999px;border:1px solid var(--lime);background:transparent;color:var(--lime);font-weight:600;font-size:13px}
+.lead-btn:hover{background:var(--lime);color:var(--ink)}
+.lead-list{display:grid;gap:8px}
+.lead-list a{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:16px;background:var(--panel2);border:1px solid var(--line2);color:var(--text);font-weight:600;font-size:14px}
+.lead-list a:hover{border-color:var(--lime)}
+.lead-list a small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.lead-list .mi{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff;flex:none}
+.lead-list .go{margin-left:auto;color:var(--lime)}
+/* подсказки «?» */
+.hint{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--line2);background:transparent;color:var(--muted);font-size:10px;font-weight:600;padding:0;vertical-align:1px;margin-left:2px;line-height:1;cursor:help;text-transform:none}
+.hint:hover,.hint.on{border-color:var(--lime);color:var(--lime)}
+.pop{position:fixed;z-index:95;max-width:300px;background:#f2f3ef;color:var(--ink);border-radius:16px;padding:12px 14px;font-size:13px;line-height:1.5;box-shadow:0 20px 50px rgba(0,0,0,.5);display:none}
+.pop b{display:block;margin-bottom:4px;font-size:13px}
+.pop.show{display:block}
+/* воронка карточек */
+.funnel{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+@media (max-width:860px){.funnel{grid-template-columns:1fr 1fr}}
+/* календарь */
+.cal .day{display:grid;grid-template-columns:64px 1fr;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.cal .day:first-child{border-top:0}
+.cal .dt{font-size:12px;color:var(--muted);line-height:1.3}
+.cal .dt b{display:block;font-size:20px;font-weight:400;color:var(--text)}
+.cal .dt.today b{color:var(--lime)}
+.cal .ev{display:flex;gap:10px;align-items:center;font-size:13px;padding:3px 0}
+.cal .ev .ic{width:24px;height:24px;font-size:11px}
+.cal .ev .sum{margin-left:auto;white-space:nowrap}
+.taxline{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-top:12px;padding:10px 14px;border-radius:16px;background:var(--bg2);font-size:13px}
+.setf{display:grid;grid-template-columns:1fr 160px;gap:10px;align-items:center;margin:8px 0;font-size:13px}
+.setf small{display:block;color:var(--dim);font-size:11px}
+.tbl input{padding:6px 10px;border-radius:10px;text-align:right;max-width:110px}
+/* левая колонка главной не растягивается под правую */
+.home>.grid{align-content:start}
+/* светлая карточка-акцент, как белый блок на референсе */
+.card.light{background:#f2f3ef;color:var(--ink);border-color:transparent;box-shadow:none}
+.card.light .bar{background:#dcdfd6}
+.card.light .bar i{background:var(--ink)}
+.card.light [style*="color:var(--muted)"]{color:#6b7068 !important}
+.card.light .down{color:#d64545}
+@media (max-width:1200px){.home{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .side{position:fixed;left:0;top:0;width:250px;transform:translateX(-100%);transition:.25s}
+  .side.show{transform:none;box-shadow:20px 0 60px rgba(0,0,0,.6)}
+  .burger{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--text)}
+  .main{padding:16px 16px 60px}
+  .two{grid-template-columns:1fr}
+  .search{width:100%;order:5}
+  .dec{grid-template-columns:1fr}.dec .imp{text-align:left}
+  .dec>.ic{display:none}
+  .frow{grid-template-columns:1fr}
+}
+@media (max-width:520px){.kpis{grid-template-columns:1fr 1fr}.kpi .v{font-size:20px}.spark{display:none}.qa{grid-template-columns:1fr}}
+</style>
+<style>.demoNotice{padding:14px 20px;line-height:1.7;background:#253517;font-size:14px}.demoNotice>div{margin:8px 0}.demoNotice small{font-size:13px}.demoNotice .btn{margin:4px 5px 4px 0}body{font-size:16px}button,input,select,.nav a,.sub,.card h3{font-size:14px}small,.small{font-size:13px}.side{overflow:auto}.side-foot{font-size:13px}.ai-btn{color:#111}.main>*{min-width:0}.two>*{min-width:0}.tbl{font-size:14px}.demoNotice a{color:#c9ff6a}@media(max-width:520px){.main{padding:14px 10px 40px}.card{padding:14px 12px}.kpis{grid-template-columns:1fr!important}.cgrid{grid-template-columns:1fr 1fr}.demoNotice .btn{width:100%}.side{top:0;bottom:0}.two,.home{grid-template-columns:minmax(0,1fr)!important}.kpi .v{font-size:23px}.bign{grid-template-columns:1fr 1fr}.setgrid{grid-template-columns:1fr}.kanban{max-width:100%;overflow:auto}.modal{max-width:calc(100vw - 20px)}.tbl{min-width:600px}}</style><link rel="stylesheet" href="client-v2.css"><link rel="stylesheet" href="seller-v3.css">
+</head>
+<body><div class="demoNotice"><strong>Демонстрационные данные</strong><span> · 31.10.2026 · условные тарифы</span><button class="btn pri" onclick="resetBrandDemo()">Вернуть пример</button><details><summary>О демо и экспорт</summary><p>Все сведения вымышлены. Подсказки — локальные правила, внешнего ИИ нет. Документы — реестр имён файлов без распознавания.</p><button class="btn" onclick="exportBrandCSV()">Экспорт продаж CSV</button></details></div><div class="app">
+  <aside class="side" id="side">
+    <div class="logo"><i>B</i><span id="brandName">BrandOS</span></div>
+    <button class="store-btn" id="storeBtn" onclick="openStores()"></button>
+    <nav class="nav" id="nav"></nav>
+    <div class="spacer"></div>
+    <div id="whoami" style="display:none;align-items:center;gap:10px;padding:10px 8px;margin-bottom:8px;border-top:1px solid var(--line)"></div>
+    <button class="lead-btn" onclick="openLead()">О демонстрации</button>
+    <button class="ai-btn" data-owner onclick="openAI()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
+      Подсказки · имитация ИИ
+    </button>
+    <div class="side-foot">Вымышленный пример. Только локальное сохранение<br><a href="privacy.html" target="_blank" rel="noopener">Политика конфиденциальности</a><span id="ckLink" style="display:none"> · <a href="#" onclick="showCookie();return false">Cookie</a></span></div>
+  </aside>
+
+  <main class="main"><div class="bridgeNote">Продажи и расходы — за выбранный период. Склад и баланс — снимок на 31.10.2026. Все источники в демо вымышлены.</div>
+    <!-- HOME -->
+    <section class="page" id="p-home">
+      <div class="top">
+        <button class="burger" onclick="toggleSide()">☰</button>
+        <div><h1 id="greet">Доброе утро</h1><div class="sub" id="today"></div></div>
+        <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input id="q" placeholder="Поиск: задачи, сделки, документы" autocomplete="off"><div class="sres" id="sres"></div></div>
+        <div class="sources" id="sources"></div>
+      </div>
+      <div class="toolbar"><div class="pslot"></div><span style="font-size:12px;color:var(--muted)" id="perLabel"></span></div>
+
+      <div class="grid kpis" id="kpis"></div>
+
+      <div class="card plan light">
+        <div><div style="color:var(--muted);font-size:12px">План месяца <span class="hslot" data-h="plan"></span></div><div style="font-size:18px;font-weight:700" class="num" id="planTxt"></div></div>
+        <div class="bar"><i id="planBar"></i></div>
+        <div style="font-size:12px;color:var(--muted)" id="planNote"></div>
+      </div>
+
+      <div class="home">
+        <div class="grid">
+          <div class="grid two">
+            <div class="card"><h3>Сценарий денег на 30 дней <span class="hslot" data-h="safety"></span><span class="r" id="cfMin"></span></h3>
+              <div id="cf"></div>
+              <div class="legend"><span><i style="background:var(--cyan)"></i>остаток на счетах</span><span><i style="background:var(--red)"></i>порог безопасности</span><span><i style="background:var(--violet)"></i>крупные платежи</span></div>
+            </div>
+            <div class="card"><h3>Маржа по каналам <span class="hslot" data-h="margin"></span></h3><div id="channels"></div></div>
+          </div>
+          <div class="card"><h3>Календарь денег и событий<span class="r"><div class="seg" id="calSeg"><button data-d="7" class="on">7 дней</button><button data-d="14">14</button><button data-d="30">30</button></div></span></h3><div id="cal"></div><div id="taxLine"></div></div>
+          <div class="grid minis" id="minis"></div>
+        </div>
+
+        <div class="grid" style="align-content:start">
+          <div class="card list"><h3>Что важно сегодня<span class="r" style="color:var(--dim)" id="feedCnt"></span></h3><div id="feed"></div></div>
+          <div class="card"><h3>Быстрые действия</h3>
+            <div class="qa">
+              <button class="btn" data-owner onclick="openTask()">+ Задача</button>
+              <button class="btn" data-owner onclick="openDeal()">+ Сделка</button>
+              <button class="btn" onclick="go('docs');setTimeout(()=>document.getElementById('upl').click(),200)">Загрузить док</button>
+              <button class="btn" data-owner onclick="go('decisions')">Разбор утра</button>
+              <button class="btn" data-acc onclick="go('finance')">Финансы</button>
+            </div>
+          </div>
+          <div class="card list"><h3>Последние документы<span class="r"><a href="#docs">все →</a></span></h3><div id="lastDocs"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DECISIONS -->
+    <section class="page" id="p-decisions">
+      <div class="top"><button class="burger" onclick="toggleSide()">☰</button><div><h1>Центр решений</h1><div class="sub">Учебные сценарии и оценки правил, без обещания результата</div></div></div>
+      <div class="note">Решения собраны локальными правилами. Суммы — условные оценки сценариев, они могут пересекаться и не являются прогнозом прибыли.</div>
+      <div class="toolbar">
+        <div class="seg" id="decSeg"><button data-f="new" class="on">Новые</button><button data-f="all">Все</button><button data-f="accepted">Принятые</button><button data-f="later">Отложенные</button><button data-f="rejected">Отклонённые</button></div>
+        <span style="margin-left:auto;color:var(--muted);font-size:13px" hidden>Условная сумма сценариев: <b class="up num" id="decSum">0 ₽</b>/мес</span>
+      </div>
+      <div class="grid" id="decList"></div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section class="page" id="p-analytics">
+      <div class="top"><button class="burger" onclick="toggleSide()">☰</button><div><h1>Продажи и воронка</h1><div class="sub">Рука на пульсе: воронка, реклама и маржа по дням</div></div></div>
+      <div class="toolbar">
+        <div class="pslot"></div>
+        <select id="chSel"><option value="all">Все каналы</option><option value="WB">Wildberries</option><option value="Ozon">Ozon</option></select>
+        <span class="demo" style="margin-left:auto">ДЕМО</span>
+      </div>
+      <div class="grid kpis" id="aKpis"></div>
+      <div class="card" style="margin-top:14px"><h3>Воронка карточек <span class="hslot" data-h="ctr"></span><span class="r" id="trafLbl"></span></h3><div id="traffic"></div></div>
+      <div class="card" style="margin-top:14px"><h3 id="aChartT">Выручка и ДРР по дням</h3><div id="aChart"></div>
+        <div class="legend"><span><i style="background:var(--blue)"></i>выручка</span><span><i style="background:var(--amber)"></i>ДРР, %</span><span><i style="background:var(--red)"></i>предел ДРР</span></div></div>
+      <div class="card" style="margin-top:14px"><h3 id="rnpT">Воронка по дням</h3><div class="tw"><table class="tbl num" id="rnp"></table></div></div>
+      <div class="card" style="margin-top:14px"><h3>Товары: ABC по выручке</h3><div class="tw"><table class="tbl num" id="sku"></table></div></div>
+    </section>
+
+    <!-- PRODUCTS -->
+    <section class="page" id="p-products">
+      <div class="top"><button class="burger" onclick="toggleSide()">☰</button><div><h1>Склад и товары</h1><div class="sub">Остатки, цены, маркировка, позиции в поиске и отзывы</div></div><span class="demo" style="margin-left:auto">ДЕМО</span></div>
+      <div class="grid kpis" id="pKpis"></div>
+      <div class="card" style="margin-top:14px"><h3>Остатки по складам: штук / на сколько дней хватит <span class="hslot" data-h="days_stock"></span><span class="r" id="oosNote"></span></h3><div class="tw"><table class="tbl num" id="whTbl"></table></div>
+        <div class="legend"><span><i style="background:var(--red)"></i>меньше 7 дней или ноль</span><span><i style="background:var(--amber)"></i>7–14 дней</span><span><i style="background:var(--green)"></i>норма</span><span><i style="background:var(--violet)"></i>больше 90 дней, залежалось</span></div></div>
+      <div class="grid two" style="margin-top:14px">
+        <div class="card"><h3>Цены и СПП <span class="hslot" data-h="spp"></span></h3><div class="tw"><table class="tbl num" id="priceTbl"></table></div></div>
+        <div class="card"><h3>Честный знак <span class="hslot" data-h="cz"></span></h3><div id="cz"></div></div>
+      </div>
+      <div class="grid two" style="margin-top:14px">
+        <div class="card"><h3>Позиции в поиске <span class="hslot" data-h="freq"></span></h3><div class="tw"><table class="tbl num" id="seoTbl"></table></div></div>
+        <div class="card"><h3>Отзывы и вопросы</h3><div class="tw"><table class="tbl num" id="revTbl"></table></div></div>
+      </div>
+      <div class="card" style="margin-top:14px"><h3>Конкуренты по главным товарам<span class="r" style="color:var(--dim)">источник: сервис аналитики (MPStats и аналоги)</span></h3><div class="tw"><table class="tbl num" id="compTbl"></table></div></div>
+    </section>
+
+    <!-- UNIT -->
+    <section class="page" id="p-unit">
+      <div class="top"><button class="burger" onclick="toggleSide()">☰</button><div><h1>Юнит-экономика</h1><div class="sub">Сколько остаётся с одной проданной штуки. Комиссии меняются, держите тарифы свежими</div></div></div>
+      <div class="grid kpis" id="uKpis"></div>
+      <div class="grid two calcrow" style="margin-top:14px">
+        <div class="card"><h3>Калькулятор <span class="hslot" data-h="unit_profit"></span><span class="r"><select id="cPick" style="width:auto;min-width:200px"></select></span></h3><div id="calcIn"></div></div>
+        <div class="card"><h3>Результат на 1 штуку</h3><div id="calcOut"></div></div>
+      </div>
+      <div class="card" style="margin-top:14px"><h3>Все товары<span class="r" style="color:var(--dim)">нажмите на строку, чтобы увидеть разбор</span></h3>
+        <div class="toolbar" style="margin-bottom:6px"><div class="seg" id="ueSeg"><button data-c="all" class="on">Все</button><button data-c="WB">WB</button><button data-c="Ozon">Ozon</button></div></div>
+        <div class="tw"><table class="tbl num" id="ueTbl"></table></div></div>
+      <div class="card" style="margin-top:14px"><h3>Тарифы площадок <span class="hslot" data-h="tariffs"></span><span class="r" id="tarDate"></span></h3><div id="tariffs"></div></div>
+    </section>
+
+    <!-- ADS -->
+    <section class="page" id="p-ads">
+      <div class="top"><button class="burger" onclick="toggleSide()">☰</button><div><h1>Реклама</h1><div class="sub">Какие товары рекламировать, какой стратегией и сколько можно платить за заказ</div></div><span class="demo" style="margin-left:auto">ДЕМО</span></div>
+      <div class="card light" style="margin-bottom:14px"><div class="q3">
+        <div><b>1. Есть деньги на рекламу?</b><span>Вклад после текущих переменных расходов должен быть положительным; постоянные расходы проверяются отдельно.</span></div>
+        <div><b>2. Хватит товара?</b><span>В этой модели — не менее 14 дней доступного запаса. Товар в пути не считается доступным до приёмки.</span></div>
+        <div><b>3. Карточка продаёт?</b><span>Условные проверки примера: рейтинг от 4,6, выкуп от 80% и сценарий денег выше порога безопасности. Это не гарантия отдачи.</span></div>
+      </div></div>
+      <div class="toolbar"><div class="pslot"></div><span class="newPeriodBadge" id="adPeriodLabel"></span></div><div class="grid kpis" id="adKpis"></div>
+      <div class="toolbar" style="margin-top:14px"><div class="seg" id="adSeg"><button data-f="all" class="on">Все</button><button data-f="go">Проверки пройдены</button><button data-f="cut">Проверить затраты</button><button data-f="no">Есть ограничения</button></div><span style="font-size:12px;color:var(--muted)">Сортировка: от самых перспективных</span></div>
+      <div class="grid adgrid" id="adList"></div>
+      </section>
+
+    <!-- FINANCE -->
+    <section class="page" id="p-finance">
+      <div class="top"><button class="burger" onclick="toggleSide()">☰</button><div><h1>Финансы</h1><div class="sub">Прибыль, удержания, долги, капитал и налоги</div></div><span class="demo" style="margin-left:auto">ДЕМО</span></div>
+      <div class="toolbar"><div class="pslot"></div></div>
+      <div class="grid kpis" id="fKpis"></div>
+      <div class="card" style="margin-top:14px"><h3>ОПиУ: прибыли и убытки по месяцам <span class="hslot" data-h="pnl"></span></h3><div class="tw"><table class="tbl num" id="pnl"></table></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:10px" id="beNote"></div></div>
+      <div class="grid two" style="margin-top:14px">
+        <div class="card"><h3>Удержания маркетплейсов за неделю <span class="hslot" data-h="holds"></span><span class="r" id="hdTot"></span></h3><div id="holds"></div></div>
+        <div class="card"><h3>Капитал бизнеса</h3><div id="capital"></div></div>
+      </div>
+      <div class="grid two" style="margin-top:14px">
+        <div class="card"><h3>Мы должны: поставщики и подрядчики <span class="hslot" data-h="credit"></span><span class="r" id="crTot"></span></h3><div class="tw"><table class="tbl num" id="credTbl"></table></div></div>
+        <div class="card"><h3>Налоговый контроль <span class="hslot" data-h="nds"></span></h3><div id="taxCtl"></div></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="page" id="p-settings">
+      <div class="top"><button class="burger" onclick="toggleSide()">☰</button><div><h1>Настройки</h1><div class="sub">Учебные параметры: меняйте только вымышленные значения</div></div></div>
+      <div class="note">Учебные изменения сохраняются в этом браузере. Вернуть исходное состояние можно кнопкой вверху.</div>
+      <div class="grid two">
+        <div class="card"><h3>Бизнес</h3><div id="setBiz"></div></div>
+        <div class="card"><h3>Постоянные расходы в месяц <span class="hslot" data-h="breakeven"></span></h3><div id="setFixed"></div></div>
+      </div>
+      <div class="card" style="margin-top:14px"><h3>Товары: цена и себестоимость <span class="hslot" data-h="unit_profit"></span></h3><div class="tw"><table class="tbl num" id="setSku"></table></div></div>
+      <div class="toolbar" style="margin-top:16px"><button class="btn pri" onclick="saveSettings()">Сохранить и пересчитать</button><button class="btn ghost" onclick="resetSettings()">Вернуть демо-цифры</button></div>
+    </section>
+
+    <!-- CRM -->
+    <section class="page" id="p-crm">
+      <div class="top"><button class="burger" onclick="toggleSide()">☰</button><div><h1>CRM · оптовые сделки</h1><div class="sub">Учебные оптовые сделки. В продажи маркетплейсов не входят.</div></div>
+        <button class="btn pri" style="margin-left:auto" onclick="openDeal()">+ Сделка</button></div>
+      <div class="grid kpis" id="crmKpis" style="margin-bottom:14px"></div>
+      <div class="kanban" id="crmBoard"></div>
+    </section>
+
+    <!-- TASKS -->
+    <section class="page" id="p-tasks">
+      <div class="top"><button class="burger" onclick="toggleSide()">☰</button><div><h1>Задачи</h1><div class="sub">Доска команды, локальные правила могут создавать учебные задачи</div></div>
+        <button class="btn pri" style="margin-left:auto" onclick="openTask()">+ Задача</button></div>
+      <div class="toolbar">
+        <select id="fWho"><option value="">Все исполнители</option></select>
+        <select id="fPri"><option value="">Любой приоритет</option><option value="hi">Высокий</option><option value="mid">Средний</option><option value="lo">Низкий</option></select>
+        <label style="display:flex;gap:6px;align-items:center;color:var(--muted);font-size:13px;cursor:pointer"><input type="checkbox" id="fAI" style="width:auto"> только от правил</label>
+      </div>
+      <div class="kanban" id="taskBoard"></div>
+    </section>
+
+    <!-- DOCS -->
+    <section class="page" id="p-docs">
+      <div class="top"><button class="burger" onclick="toggleSide()">☰</button><div><h1>Документы</h1><div class="sub">Учебный реестр. Добавляется только имя файла; распознавания содержимого нет</div></div>
+        <button class="btn pri" style="margin-left:auto" onclick="document.getElementById('upl').click()">Загрузить файл</button>
+        <input type="file" id="upl" multiple hidden></div>
+      <div class="note">Файл добавляется только в учебный список по имени. Для реального разбора документов нужна отдельная согласованная реализация.</div>
+      <div class="toolbar">
+        <select id="fSrc"><option value="">Все источники</option></select>
+        <select id="fSt"><option value="">Все статусы</option><option>Разобран</option><option>На проверке</option><option>Новый</option><option>Ошибка</option></select>
+      </div>
+      <div class="card"><div class="tw"><table class="tbl" id="docTbl"></table></div></div>
+    </section>
+
+    <!-- INTEGRATIONS -->
+    <section class="page" id="p-integrations">
+      <div class="top"><button class="burger" onclick="toggleSide()">☰</button><div><h1>Интеграции</h1><div class="sub">Откуда дашборд берёт цифры</div></div></div>
+      <div class="note">Это обзор возможных подключений при отдельном внедрении. В демо все подключения выключены.</div>
+      <div class="grid ints" id="ints"></div>
+    </section>
+  </main>
+</div>
+
+<!-- modals -->
+<div class="ov" id="mTask"><div class="modal">
+  <h2 id="mTaskT">Новая задача</h2>
+  <div class="fld"><label>Что сделать</label><input id="tTitle"></div>
+  <div class="frow"><div class="fld"><label>Исполнитель</label><select id="tWho"></select></div>
+    <div class="fld"><label>Приоритет</label><select id="tPri"><option value="hi">Высокий</option><option value="mid" selected>Средний</option><option value="lo">Низкий</option></select></div></div>
+  <div class="frow"><div class="fld"><label>Срок</label><input type="date" id="tDue"></div>
+    <div class="fld"><label>Колонка</label><select id="tCol"></select></div></div>
+  <div class="mfoot"><button class="btn rd ghost" id="tDel" style="margin-right:auto">Удалить</button><button class="btn ghost" onclick="closeM('mTask')">Отмена</button><button class="btn pri" onclick="saveTask()">Сохранить</button></div>
+</div></div>
+
+<div class="ov" id="mDeal"><div class="modal">
+  <h2 id="mDealT">Новая сделка</h2>
+  <div class="fld"><label>Клиент (компания)</label><input id="dCo" placeholder="Демо-покупатель"></div>
+  <div class="frow"><div class="fld"><label>Контактное лицо</label><input id="dWho"></div>
+    <div class="fld"><label>Сумма, ₽</label><input id="dSum" type="number" min="0"></div></div>
+  <div class="frow"><div class="fld"><label>Этап</label><select id="dStage"></select></div>
+    <div class="fld"><label>Менеджер</label><select id="dMgr"></select></div></div>
+  <div class="fld"><label>Комментарий</label><textarea id="dNote" rows="3"></textarea></div>
+  <div class="mfoot"><button class="btn rd ghost" id="dDel" style="margin-right:auto">Удалить</button><button class="btn ghost" onclick="closeM('mDeal')">Отмена</button><button class="btn pri" onclick="saveDeal()">Сохранить</button></div>
+</div></div>
+
+<div class="ov" id="mStore"><div class="modal" style="width:640px">
+  <div id="mStoreIntro"><h2>Тренировочный дашборд селлера</h2>
+    <p style="color:var(--muted);line-height:1.6;margin:-6px 0 16px;font-size:14px">Все магазины и цифры вымышленные. Выберите магазин и смотрите, как он живёт: где теряет деньги, что кончается на складе, что советуют правила. Нажимайте «?» у метрик, меняйте свои цифры в Настройках. Всё, что вы меняете, хранится только в вашем браузере.</p></div>
+  <h2 style="font-size:16px">Выберите магазин</h2>
+  <div id="storeList" class="store-list"></div>
+  <div class="mfoot"><button class="btn ghost" onclick="closeM('mStore');openLead()" style="margin-right:auto">О демонстрации</button><button class="btn ghost" onclick="pickStore(STORE)">Остаться в текущем</button></div>
+</div></div>
+
+<div class="ov" id="mLead"><div class="modal" style="width:520px">
+  <h2>Соберу такой дашборд для вашего магазина</h2>
+  <div style="color:var(--muted);font-size:14px;line-height:1.6;margin:-6px 0 16px">Ваши отчёты WB и Ozon, юнит-экономика по каждому товару, советы по рекламе, деньги и налоги на одном экране. Напишите, где вам удобно: расскажу, как это будет работать на ваших цифрах.</div>
+  <div id="leadBtns" class="lead-list"></div>
+  <div style="font-size:12px;color:var(--dim);line-height:1.5;margin-top:14px">Сайт ничего о вас не собирает. Переписка в мессенджере обрабатывается по <a href="privacy.html" target="_blank" rel="noopener">Политике конфиденциальности</a>.</div>
+  <div class="mfoot"><button class="btn ghost" onclick="closeM('mLead')">Закрыть</button></div>
+</div></div>
+
+<div class="ov" id="mSku"><div class="modal" style="width:560px"><h2 id="mSkuT"></h2><div id="mSkuB"></div>
+  <div class="mfoot"><button class="btn pri" onclick="closeM('mSku')">Закрыть</button></div></div></div>
+
+<div class="ov" id="mSim"><div class="modal" style="width:560px"><h2 id="mSimT"></h2><div id="mSimB"></div>
+  <div class="mfoot"><button class="btn pri" onclick="closeM('mSim')">Закрыть</button></div></div></div>
+
+<div class="ov" id="mInt"><div class="modal"><h2 id="mIntT"></h2><div id="mIntB" style="color:var(--muted);line-height:1.6;font-size:13px"></div>
+  <div class="mfoot"><button class="btn pri" onclick="closeM('mInt')">Понятно</button></div></div></div>
+
+<div class="drawer" id="ai">
+  <div class="dhead"><span class="ic vio">✦</span><div><b>Подсказки · имитация ИИ</b><small>Демо-режим: отвечает по демо-цифрам. внешний ИИ не подключён</small></div><button class="x" onclick="closeAI()">×</button></div>
+  <div class="msgs" id="msgs"></div>
+  <div class="chips" id="chips"></div>
+  <div class="din"><input id="aiIn" placeholder="Спросите про выручку, рекламу, остатки…"><button class="btn pri" onclick="ask()">→</button></div>
+</div>
+<div class="cookie" id="cookie" role="dialog" aria-label="Cookie">
+  <div>Мы используем cookie и похожие технологии. Необходимые нужны для работы дашборда. С вашего согласия подключим Яндекс Метрику, чтобы считать посещения и понимать, какие разделы полезны. <a href="privacy.html" target="_blank" rel="noopener">Политика конфиденциальности</a></div>
+  <div class="ckb"><button class="btn" onclick="setConsent('necessary')">Только необходимые</button><button class="btn pri" onclick="setConsent('all')">Разрешить аналитику</button></div>
+</div>
+<div class="tip" id="tip"></div>
+<div class="toast" id="toast"></div>
+
+<script src="seller-model.js"></script>
+<script>
+/* =========================================================
+   ДЕМО-ДАННЫЕ. Всё в одном объекте DEMO.
+   На этапе 2 сервер будет отдавать такой же объект с реальными цифрами.
+   ========================================================= */
+let seed = 42; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const TODAY = new Date(2026,9,31); TODAY.setHours(0,0,0,0);
+const addD = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const iso = d => { d = new Date(d); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }; // по местному времени, без сдвига UTC
+
+const DEMO = {"brand":"BrandOS · демо","owner":"Демо-владелец","team":["Демо-владелец","Менеджер А","Менеджер Б"],"sources":[{"name":"WB","st":"demo"},{"name":"Ozon","st":"demo"},{"name":"CRM","st":"demo"},{"name":"Банк","st":"off"}],"kpi":{"revenue":{"v":0,"d":0,"spark":[0,0]},"profit":{"v":0,"d":0,"spark":[0,0]},"margin":{"v":0,"d":0,"spark":[0,0]},"balance":{"v":180000,"d":0,"spark":[180,180]}},"plan":{"month":300000},"settings":{"cogsPct":0,"maxDRR":12,"safety":60000,"ndsThreshold":999999999,"taxPct":6},"channels":[],"payments":[{"day":5,"sum":-5000,"name":"Аренда (демо)"},{"day":10,"sum":-12000,"name":"Команда (демо)"},{"day":17,"sum":-80000,"name":"Учебная поставка"},{"day":26,"sum":-15000,"name":"Условный платёж (демо)"}],"taxes":{"usn":15000,"due":26,"nds":0,"regime":"Условная модель, ставка 6%"},"receivables":[{"who":"WB (демо)","sum":30000,"when":"через 7 дней"},{"who":"Ozon (демо)","sum":18000,"when":"через 14 дней"}],"sales":{"today":0,"yesterday":0,"orders":0,"returns":0},"supplies":[{"wh":"WB · Склад А","st":"в пути","qty":30,"eta":5}],"stock":{"total":0,"days":0,"oos":0,"slow":0},"funnel":[{"s":"Лиды","n":3},{"s":"Переговоры","n":2},{"s":"КП","n":1},{"s":"Оплата","n":0}],"mix":{"mp":1,"wb":0.5,"check":[1000,0],"ads":{"WB":[0.08,0],"Ozon":[0.08,0]}},"extraChannels":[],"notes":[],"documents":[{"name":"ДЕМО-Счёт поставщика А","src":"Загрузка","type":"Счёт","sum":80000,"date":-2,"st":"На проверке"},{"name":"ДЕМО-Отчёт продаж октября","src":"WB","type":"Отчёт","sum":0,"date":-1,"st":"Разобран"}],"taskCols":["Новые","В работе","На проверке","Готово"],"tasks":[{"id":1,"t":"Проверить убыточный товар (демо)","who":"Менеджер А","pri":"hi","due":1,"col":0,"ai":false},{"id":2,"t":"Подготовить поставку (демо)","who":"Менеджер Б","pri":"mid","due":3,"col":1,"ai":false}],"dealStages":["Лид","Переговоры","КП отправлено","Счёт выставлен","Оплачено"],"deals":[{"id":1,"co":"Демо-покупатель А","who":"Контакт А (вымышленный)","sum":24000,"st":1,"mgr":"Менеджер А","note":"Учебная сделка; в продажи не входит"},{"id":2,"co":"Демо-покупатель Б","who":"Контакт Б (вымышленный)","sum":16000,"st":2,"mgr":"Демо-владелец","note":"Учебная сделка; в продажи не входит"}],"decisions":[],"warehouses":{"WB":["Склад А","Склад Б","Склад В","Склад Г"],"Ozon":["Склад А","Склад Б","Склад В","Склад Г"]},"whShare":[0.4,0.3,0.2,0.1],"skus":[{"n":"Футболка «Ритм» (демо)","art":"DEMO-B01","cat":"Одежда (демо)","ch":"WB","price":2000,"disc":25,"spp":10,"cogs":500,"comm":20,"log":60,"ret":40,"stor":5,"buy":100,"ads":100,"perDay":0,"q":100,"wh":[5,3,2,0],"transit":30,"rating":4.8,"neg7":0,"unans":0},{"n":"Сумка «Линия» (демо)","art":"DEMO-B02","cat":"Аксессуары (демо)","ch":"Ozon","price":2500,"disc":20,"spp":10,"cogs":700,"comm":20,"log":80,"ret":40,"stor":10,"buy":100,"ads":150,"perDay":0,"q":60,"wh":[40,30,20,10],"transit":0,"rating":4.7,"neg7":1,"unans":0},{"n":"Чехол «Точка» (демо)","art":"DEMO-B03","cat":"Аксессуары (демо)","ch":"WB","price":500,"disc":0,"spp":10,"cogs":300,"comm":20,"log":50,"ret":30,"stor":5,"buy":100,"ads":50,"perDay":0,"q":40,"wh":[60,50,30,10],"transit":0,"rating":4.4,"neg7":3,"unans":2},{"n":"Папка «Контур» (демо)","art":"DEMO-B04","cat":"Канцелярия (демо)","ch":"Ozon","price":1000,"disc":0,"spp":5,"cogs":400,"comm":20,"log":60,"ret":40,"stor":5,"buy":100,"ads":80,"perDay":0,"q":20,"wh":[20,15,10,5],"transit":0,"rating":4.9,"neg7":0,"unans":0}],"seo":[{"q":"футболка демо","sku":"Футболка «Ритм» (демо)","pos":20,"was":28,"freq":1000}],"competitors":[{"sku":"Футболка «Ритм» (демо)","rows":[{"n":"Демо-конкурент А","p":1600,"s":20},{"n":"Демо-конкурент Б","p":1400,"s":30}]}],"cz":{"balance":5000,"ordered":500,"applied":400,"inCirculation":390,"issues":[{"t":"10 учебных кодов не введены в оборот","s":"Имитация статусов маркировки; реальной проверки нет"}]},"pnlMonths":[],"pnlRevenue":[],"pnlVarPct":{"cogs":0,"comm":0,"log":0,"stor":0,"ads":0,"holds":0,"tax":6},"pnlFixed":{"fot":12000,"rent":5000,"other":3000},"ytdRevenue":[],"holdsWeek":[{"n":"Учебное удержание","v":0,"prev":0}],"credit":[{"who":"Демо-поставщик А","sum":80000,"due":17,"note":"Учебная поставка"}],"inboundFactory":{"qty":30,"date":"5 ноября (демо)","cost":15000},"events":[{"in":5,"t":"Приёмка учебной поставки","type":"supply"}],"integrations":[{"k":"WB","n":"WB","c":"#a73afd","st":"demo","d":"Вымышленные продажи и остатки","how":"При отдельном внедрении: согласованный импорт отчётов или подключение API только для чтения."},{"k":"Oz","n":"Ozon","c":"#005bff","st":"demo","d":"Вымышленные продажи и остатки","how":"При отдельном внедрении: согласованный импорт отчётов или подключение API только для чтения."},{"k":"CRM","n":"CRM","c":"#1fb6c9","st":"off","d":"Сейчас локальная учебная доска","how":"При отдельном внедрении можно согласовать обмен сделками с выбранной CRM."},{"k":"Б","n":"Банк / расходы","c":"#e9b300","st":"off","d":"Сейчас условный финансовый сценарий","how":"При отдельном внедрении: согласованные выписки и статьи расходов; реальные подключения в демо отсутствуют."}]};
+const STORES={pajamas:{name:"Линия · вымышленный бренд",niche:"одежда и аксессуары",about:"Один согласованный пример: продажи, расходы и остатки",data:{}}};
+let STORE = 'pajamas'; try { STORE = localStorage.getItem('tatyana_demo_brandos_v3_store') || 'pajamas'; } catch(e) {}
+if (!STORES[STORE]) STORE = 'pajamas';
+(() => { const d = STORES[STORE].data, plain = v => v && typeof v === 'object' && !Array.isArray(v);
+  Object.keys(d).forEach(k => { DEMO[k] = plain(DEMO[k]) && plain(d[k]) ? {...DEMO[k], ...d[k]} : d[k]; }); })();
+
+/* ---- настройки пользователя (страница «Настройки») поверх демо-цифр, у каждого магазина свои ---- */
+const SETTINGS_KEY = 'tatyana_demo_brandos_v3_settings_' + STORE;
+let SAVED = {}; try { SAVED = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch(e) {}
+if (SAVED.owner) DEMO.owner = SAVED.owner;
+if (SAVED.plan) DEMO.plan.month = SAVED.plan;
+['maxDRR','safety','taxPct','ndsThreshold'].forEach(k => { if (SAVED[k] != null) DEMO.settings[k] = SAVED[k]; });
+if (SAVED.fixed) Object.assign(DEMO.pnlFixed, SAVED.fixed);
+if (SAVED.skus) DEMO.skus.forEach(sk => Object.assign(sk, SAVED.skus[sk.art] || {}));
+DEMO.pnlVarPct.tax = DEMO.settings.taxPct;
+
+/* ---- категории и тарифы площадок: комиссия по категории, коэффициент логистики по площадке ---- */
+const CATS = {};
+DEMO.tariffs = { comm:{}, logK:{WB:1, Ozon:1}, updated: iso(addD(TODAY, -9)) };
+DEMO.skus.forEach(k => { k.cat = k.cat || CATS[k.art] || 'Прочее'; k.log0 = k.log; k.ret0 = k.ret; const key = k.ch+'|'+k.cat; if (!(key in DEMO.tariffs.comm)) DEMO.tariffs.comm[key] = k.comm; });
+if (SAVED.tariffs) { Object.assign(DEMO.tariffs.comm, SAVED.tariffs.comm || {}); Object.assign(DEMO.tariffs.logK, SAVED.tariffs.logK || {}); if (SAVED.tariffs.updated) DEMO.tariffs.updated = SAVED.tariffs.updated; }
+DEMO.skus.forEach(k => { k.comm = DEMO.tariffs.comm[k.ch+'|'+k.cat]; k.log = Math.round(k.log0*DEMO.tariffs.logK[k.ch]); k.ret = Math.round(k.ret0*DEMO.tariffs.logK[k.ch]); });
+
+// A single reproducible ledger drives products, daily sales, funnel, advertising and P&L.
+DEMO.daily=[];DEMO.rnp=[];DEMO.ledger=[];
+(()=>{
+ const scales=[.4,.45,.5,.55,.6,.65,.7,.75,.8,1];
+ scales.forEach((scale,m)=>{
+   const days=new Date(2026,m+1,0).getDate();
+   for(let day=1;day<=days;day++){
+     const date=new Date(2026,m,day), grouped={};let total=0;
+     for(const s of DEMO.skus){
+       const monthly=Math.round(s.q*scale),qty=Math.floor(monthly*day/days)-Math.floor(monthly*(day-1)/days),u=unit(s);
+       const rev=qty*u.sp,ads=qty*s.ads,contrib=qty*u.profit;
+       DEMO.ledger.push({date,art:s.art,ch:s.ch,qty,rev,ads,contrib});total+=rev;
+       const g=grouped[s.ch]||={date,ch:s.ch,views:0,clicks:0,cart:0,orders:0,buy:0,rev:0,ads:0,contrib:0};
+       const orders=Math.ceil(qty/(s.buy/100));g.orders+=orders;g.buy+=qty;g.cart+=orders*2;g.clicks+=orders*10;g.views+=orders*100;g.rev+=rev;g.ads+=ads;g.contrib+=contrib;
+     }
+     DEMO.daily.push({date,total});DEMO.rnp.push(...Object.values(grouped));
+   }
+ });
+ DEMO.ytdRevenue=scales.map((_,m)=>DEMO.daily.filter(x=>x.date.getMonth()===m).reduce((a,x)=>a+x.total,0));
+ const rev=DEMO.skus.reduce((a,s)=>a+s.q*unit(s).sp,0),tot={cogs:0,comm:0,log:0,stor:0,ads:0,holds:0,tax:0};
+ DEMO.skus.forEach(s=>{const u=unit(s);tot.cogs+=s.q*s.cogs;tot.comm+=s.q*u.comm;tot.log+=s.q*(s.log+u.retPer);tot.stor+=s.q*s.stor;tot.ads+=s.q*s.ads;tot.tax+=s.q*u.tax;s.perDay=s.q/31;});
+ Object.keys(tot).forEach(k=>DEMO.pnlVarPct[k]=rev?tot[k]/rev*100:0);
+ DEMO.settings.cogsPct=DEMO.pnlVarPct.cogs;
+ DEMO.mix.wb=DEMO.skus.filter(s=>s.ch==='WB').reduce((a,s)=>a+s.q*unit(s).sp,0)/rev;
+ DEMO.pnlRevenue=DEMO.ytdRevenue.slice(-6);DEMO.pnlMonths=['Май','Июнь','Июль','Август','Сентябрь','Октябрь'];
+ DEMO.documents[1].sum=rev;DEMO.kpi.revenue.v=rev;
+})();
+function skuPeriod(s,a,b){const rows=DEMO.ledger.filter(x=>x.art===s.art&&x.date>=a&&x.date<=b);return {...s,q:rows.reduce((v,x)=>v+x.qty,0),rev:rows.reduce((v,x)=>v+x.rev,0)};}
+
+/* ---- периоды: неделя, месяц, квартал ---- */
+let PERIOD = 'month'; try { PERIOD = localStorage.getItem('tatyana_demo_brandos_v3_period') || 'month'; } catch(e) {}
+const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const MONTHS_DAT = ['январю','февралю','марту','апрелю','маю','июню','июлю','августу','сентябрю','октябрю','ноябрю','декабрю'];
+const MONTHS_NOM = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+function periodRange(p = PERIOD){
+  if (p === 'week') return {from:addD(TODAY,-6), to:TODAY, prevFrom:addD(TODAY,-13), prevTo:addD(TODAY,-7), label:'последние 7 дней', prev:'к прошлой неделе', short:'за неделю'};
+  if (p === 'quarter') return {from:addD(TODAY,-89), to:TODAY, prevFrom:addD(TODAY,-179), prevTo:addD(TODAY,-90), label:'последние 90 дней', prev:'к предыдущим 90 дням', short:'за 90 дней'};
+  const from = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1), pf = new Date(TODAY.getFullYear(), TODAY.getMonth()-1, 1);
+  const pEnd = new Date(TODAY.getFullYear(), TODAY.getMonth(), 0), pTo = new Date(pf.getFullYear(), pf.getMonth(), Math.min(TODAY.getDate(), pEnd.getDate()));
+  return {from, to:TODAY, prevFrom:pf, prevTo:pTo, label:'с 1 '+MONTHS_GEN[TODAY.getMonth()], prev:'к 1–'+pTo.getDate()+' '+MONTHS_GEN[pf.getMonth()], short:'за '+MONTHS_NOM[TODAY.getMonth()], month:true};
+}
+const inR = (d, a, b) => d >= a && d <= b;
+const sumDaily = (a, b) => DEMO.daily.filter(x => inR(x.date, a, b)).reduce((s, x) => s + x.total, 0);
+const varShare = () => Object.values(DEMO.pnlVarPct).reduce((a, b) => a + b, 0) / 100;
+const fixedMonth = () => Object.values(DEMO.pnlFixed).reduce((a, b) => a + b, 0);
+// прибыль за отрезок: маржинальный доход минус постоянные расходы. Для календарного месяца берём постоянные расходы целиком, как в ОПиУ
+function finFor(a, b, wholeMonth){
+  const rev = sumDaily(a, b), days = Math.round((b - a) / 864e5) + 1;
+  const contribution=DEMO.ledger.filter(x=>inR(x.date,a,b)).reduce((v,x)=>v+x.contrib,0);
+  const profit = contribution - (wholeMonth ? fixedMonth() : fixedMonth()*days/30.4);
+  return {rev, profit, margin: rev ? profit/rev*100 : 0};
+}
+DEMO.cashflow = (() => {
+  const last = DEMO.daily.slice(-14), R = last.reduce((a,x)=>a+x.total,0)/Math.max(last.length,1);
+  const M = DEMO.mix, V = DEMO.pnlVarPct, net = 1 - (V.comm+V.log+V.stor+V.holds)/100;  // сколько площадка перечисляет с рубля продаж
+  let bal = DEMO.kpi.balance.v; const out = [];
+  for (let i = 0; i <= 30; i++) {
+    const d = addD(TODAY, i), wk = d.getDay(); let ev = [];
+    if (i > 0) {
+      bal += R*(1-M.mp)*(0.8+rnd()*0.4);                                  // опт и сайт
+      bal -= R*V.ads/100*(0.85+rnd()*0.3) + DEMO.pnlFixed.other/30;       // реклама и мелкие расходы
+      if (wk === 3) { const s = 7*R*M.mp*M.wb*net*(0.9+rnd()*0.2); bal += s; ev.push({name:'Выплата WB', sum:s}); }
+      if ((d.getDate() === 1 || d.getDate() === 18) && M.wb < 1) { const s = 15*R*M.mp*(1-M.wb)*net*(0.9+rnd()*0.2); bal += s; ev.push({name:'Выплата Ozon', sum:s}); }
+      DEMO.payments.forEach(p => { if (d.getDate() === p.day) { bal += p.sum; ev.push(p); } });
+    }
+    out.push({date:d, bal:Math.round(bal), ev});
+  }
+  return out;
+})();
+
+/* ---- юнит-экономика одной проданной штуки ---- */
+function unit(s){
+  const sp = s.price*(1-s.disc/100);              // ваша цена (с неё считается комиссия)
+  const buyer = sp*(1-s.spp/100);                 // что видит покупатель после СПП
+  const comm = sp*s.comm/100;
+  const retPer = (100-Math.max(1,s.buy))/Math.max(1,s.buy)*(s.log+s.ret); // невыкупы: логистика туда и обратно, размазанная на выкупленные
+  const tax = sp*DEMO.settings.taxPct/100;
+  const costs = [['Себестоимость',s.cogs],['Комиссия',comm],['Логистика',s.log],['Невыкупы и возвраты',retPer],['Хранение',s.stor],['Реклама',s.ads],['Налог',tax]];
+  const profit = sp - costs.reduce((a,c)=>a+c[1],0);
+  return {sp, buyer, comm, retPer, tax, costs, profit, margin: sp>0?profit/sp*100:0, roi: s.cogs>0?profit/s.cogs*100:0};
+}
+DEMO.skus.forEach(s => { const u = unit(s); s.rev = Math.round(s.q*u.sp); s.m = u.margin; });
+
+/* ---- ОПиУ по месяцам, из него KPI прибыли и маржи на главной ---- */
+DEMO.pnl = DEMO.pnlRevenue.map(rev => {
+  const v = DEMO.pnlVarPct, f = DEMO.pnlFixed, r = {rev};
+  Object.keys(v).forEach(k => r[k] = rev*v[k]/100);
+  r.contrib = rev - Object.keys(v).reduce((a,k)=>a+r[k],0);
+  Object.assign(r, f);
+  r.profit = r.contrib - f.fot - f.rent - f.other;
+  r.margin = rev ? r.profit/rev*100 : 0;
+  return r;
+});
+(() => { const n = DEMO.pnl.length, c = DEMO.pnl[n-1], p = DEMO.pnl[n-2];
+  DEMO.kpi.profit.v = Math.round(c.profit); DEMO.kpi.profit.d = p.profit ? (c.profit-p.profit)/Math.abs(p.profit)*100 : 0;
+  DEMO.kpi.margin.v = c.margin; DEMO.kpi.margin.d = c.margin - p.margin; })();
+
+/* ================= пользователь и роли =================
+   Сервер (server.js) после входа подставляет window.BRANDOS_USER.
+   Если файл открыт двойным кликом без сервера, считаем, что это владелец на своём компьютере. */
+const USER = {login:'local', name:DEMO.owner, role:'owner'};
+const ROLES = {
+  owner:      {title:'Владелец',  pages:['home','decisions','analytics','products','unit','ads','finance','crm','tasks','docs','integrations','settings']},
+  accountant: {title:'Бухгалтер', pages:['home','analytics','products','unit','finance','docs']}
+};
+const ROLE = ROLES[USER.role] || ROLES.accountant;
+const can = id => ROLE.pages.includes(id);
+const isOwner = USER.role === 'owner';
+
+/* ================= хранилище ================= */
+const LS = {  // у каждого пользователя свои сохранения, чтобы в одном браузере данные не смешивались
+  get(k, def){ try { const v = localStorage.getItem('tatyana_demo_brandos_v3_'+STORE+'_'+USER.login+'_'+k); return v ? JSON.parse(v) : def; } catch(e){ return def; } },
+  set(k, v){ try { localStorage.setItem('tatyana_demo_brandos_v3_'+STORE+'_'+USER.login+'_'+k, JSON.stringify(v)); } catch(e){} }
+};
+let tasks = LS.get('tasks', DEMO.tasks.map(t => ({...t, due: iso(addD(TODAY, t.due))})));
+let deals = LS.get('deals', DEMO.deals);
+let docs = LS.get('docs', DEMO.documents.map(d => ({...d, date: iso(addD(TODAY, d.date))})));
+let decState = LS.get('decisions', {});
+
+/* ================= утилиты ================= */
+const $ = s => document.querySelector(s);
+const fmt = n => new Intl.NumberFormat('ru-RU').format(Math.round(n));
+const rub = n => fmt(n) + ' ₽';
+const kRub = n => Math.abs(n) >= 1e6 ? (n/1e6).toFixed(2).replace('.',',') + ' млн ₽' : fmt(n/1000) + ' тыс. ₽';
+const pct = n => (Number.isFinite(n)?n:0).toFixed(1).replace('.',',') + '%';
+const dShort = d => new Date(d).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}).replace('.','');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const initials = n => n.split(' ').map(x=>x[0]).join('').slice(0,2);
+function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(el._t); el._t = setTimeout(()=>el.classList.remove('show'), 2200); }
+const tip = $('#tip');
+function showTip(e, html){ tip.innerHTML = html; tip.style.display='block'; tip.style.left = Math.min(e.clientX+14, innerWidth-200)+'px'; tip.style.top = (e.clientY+14)+'px'; }
+function hideTip(){ tip.style.display='none'; }
+
+/* ================= навигация ================= */
+const PAGES = [
+  {id:'home', n:'Главная', i:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'},
+  {id:'decisions', n:'Центр решений', i:'<circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/>'},
+  {id:'analytics', n:'Продажи и воронка', i:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'},
+  {id:'products', n:'Склад и товары', i:'<path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7M12 11v10"/>'},
+  {id:'unit', n:'Юнит-экономика', i:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h2M14 11h2M8 15h2M14 15h2"/>'},
+  {id:'ads', n:'Реклама', i:'<path d="M4 10v4a1 1 0 0 0 1 1h2l5 4V5L7 9H5a1 1 0 0 0-1 1z"/><path d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/>'},
+  {id:'finance', n:'Финансы', i:'<rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20M6 15h4"/>'},
+  {id:'crm', n:'CRM', i:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5c2 .7 3.2 2.6 3.5 5.5"/>'},
+  {id:'tasks', n:'Задачи', i:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 10l2 2 4-4M8 16h8"/>'},
+  {id:'integrations', n:'Интеграции', i:'<path d="M9 7V3M15 7V3M6 7h12v4a6 6 0 0 1-12 0zM12 17v4"/>'},
+  {id:'settings', n:'Настройки', i:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'},
+  {id:'docs', n:'Документы', accOnly:true, i:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>'}  // у владельца документы открываются с Главной
+];
+function renderNav(){
+  const cur = (location.hash || '#home').slice(1);
+  const newDec = DEMO.decisions.filter(d => !decState[d.id]).length;
+  $('#nav').innerHTML = PAGES.filter(p => can(p.id) && !(p.accOnly && isOwner)).map(p => `<a href="#${p.id}" class="${cur===p.id || (isOwner&&cur==='docs'&&p.id==='home')?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p.i}</svg>${p.n}${p.id==='decisions'&&newDec?`<span class="cnt">${newDec}</span>`:''}</a>`).join('');
+}
+function go(id){ location.hash = id; }
+function route(){
+  let id = (location.hash || '#home').slice(1);
+  if (!document.getElementById('p-'+id) || !can(id)) { id = 'home'; if (location.hash && location.hash !== '#home') history.replaceState(null,'','#home'); }
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('on', p.id === 'p-'+id));
+  renderNav(); renderPeriodSeg(); $('#side').classList.remove('show'); scrollTo(0,0);
+  pop.classList.remove('show'); hideTip();
+  ({home:renderHome, decisions:renderDecisions, analytics:renderAnalytics, products:renderProducts, unit:renderUnit, ads:renderAds, finance:renderFinance, settings:renderSettings, crm:renderCRM, tasks:renderTasks, docs:renderDocs, integrations:renderInts})[id]();
+  fillHints();
+}
+function toggleSide(){ $('#side').classList.toggle('show'); }
+addEventListener('hashchange', route);
+document.addEventListener('click', e => { if (innerWidth<=860 && $('#side').classList.contains('show') && !e.target.closest('.side') && !e.target.closest('.burger')) $('#side').classList.remove('show'); });
+
+/* ================= мини-графики ================= */
+function sparkSVG(arr, color){
+  const w=80,h=30,mn=Math.min(...arr),mx=Math.max(...arr);
+  const pts = arr.map((v,i)=>`${(i/(arr.length-1)*w).toFixed(1)},${(h-3-(v-mn)/(mx-mn||1)*(h-6)).toFixed(1)}`).join(' ');
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+/* ================= ГЛАВНАЯ ================= */
+function renderHome(){
+  const h = new Date().getHours();
+  $('#greet').textContent = (h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер') + ', ' + USER.name;
+  $('#today').textContent = TODAY.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'}) + ' · демо-магазин «' + STORES[STORE].name + '», ' + STORES[STORE].niche;
+  $('#today').insertAdjacentHTML('beforeend', ' · <a href="#" onclick="openStores();return false">сменить</a>');
+  $('#sources').innerHTML = DEMO.sources.map(s => `<span class="src" title="${s.st==='ok'?'подключено':s.st==='demo'?'демо-данные':'не подключено'}"><span class="dot ${s.st==='ok'?'ok':s.st==='off'?'off':''}"></span>${s.name}</span>`).join('');
+  // показываем как в ОПиУ (постоянные расходы за весь месяц), а сравниваем честно: те же дни прошлого месяца, расходы пропорционально дням
+  const K = DEMO.kpi, R = periodRange(), shown = finFor(R.from, R.to, R.month), cur = finFor(R.from, R.to, false), prv = finFor(R.prevFrom, R.prevTo, false), sp = sparkSeries();
+  $('#perLabel').textContent = R.label + ' · сравнение ' + R.prev;
+  const cards = [
+    ['Выручка', '', rub(shown.rev), prv.rev ? (cur.rev-prv.rev)/prv.rev*100 : null, sp.rev, '#b8f229'],
+    ['Результат после расходов', 'profit', rub(shown.profit), prv.rev ? (cur.profit-prv.profit)/Math.abs(prv.profit||1)*100 : null, sp.profit, '#e6e8e3'],
+    ['Маржинальность', 'margin', pct(shown.margin), prv.rev ? cur.margin - prv.margin : null, sp.margin, '#9aa0a6'],
+    ['Деньги на счетах', '', rub(K.balance.v), K.balance.d, K.balance.spark, '#b8f229']
+  ];
+  $('#kpis').innerHTML = cards.map((c,i) => `<div class="card kpi"><h3>${c[0]} ${c[1]?hint(c[1]):''}</h3>${sparkSVG(c[4],c[5])}<div class="v num">${c[2]}</div><div class="d">${c[3]===null ? '<span style="color:var(--dim)">нет данных за прошлый период</span>' : `<span class="${c[3]>=0?'up':'down'}">${c[3]>=0?'▲':'▼'} ${i===2 ? Math.abs(c[3]).toFixed(1).replace('.',',')+' п.' : pct(Math.abs(c[3]))}</span> ${i===3?'к прошлому месяцу':R.prev}`}</div></div>`).join('');
+  // план
+  const day = TODAY.getDate(), days = new Date(TODAY.getFullYear(), TODAY.getMonth()+1, 0).getDate();
+  const fact = sumDaily(new Date(TODAY.getFullYear(), TODAY.getMonth(), 1), TODAY), p = fact / DEMO.plan.month * 100, need = DEMO.plan.month * day / days;
+  $('#planTxt').textContent = rub(fact) + ' из ' + kRub(DEMO.plan.month);
+  $('#planBar').style.width = Math.min(p,100) + '%';
+  const perDay = (DEMO.plan.month - fact) / Math.max(days - day, 1);
+  $('#planNote').innerHTML = `${pct(p)} · ${fact >= need ? '<span class="up">идём с опережением</span>' : '<span class="down">отстаём на '+kRub(need-fact)+'</span>'}<br>нужно ${kRub(perDay)} в день до конца месяца`;
+  renderCashflow(); renderChannels(); renderMinis();
+  // одна лента вместо двух: сначала риски, потом подсказки ИИ
+  const order = {red:0, amb:1, grn:2};
+  const feed = DEMO.feed
+    .filter(x => isOwner || !/ДРР|кампани|рекламн/.test(x.t+x.s))
+    .sort((a,b) => order[a.ic]-order[b.ic]).slice(0, 8);
+  $('#feedCnt').textContent = feed.length + ' пунктов';
+  $('#feed').innerHTML = feed.map(x => `<div class="it"><span class="ic ${x.ic}">${x.ic==='red'?'!':x.ic==='grn'?'↑':'•'}</span><div style="flex:1">${esc(x.t)}<small>${esc(x.s)}</small></div>${x.src==='ИИ'?'<span class="tag ai" style="align-self:flex-start">ИИ</span>':''}</div>`).join('');
+  renderCalendar();
+  $('#lastDocs').innerHTML = docs.slice(0,4).map(d => `<div class="it"><span class="ic">▤</span><div style="flex:1;min-width:0"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(d.name)}</div><small>${esc(d.src)} · ${dShort(d.date)}</small></div>${stTag(d.st)}</div>`).join('');
+}
+function renderCashflow(){
+  const data = DEMO.cashflow, W=640, H=220, pl=54, pr=12, pt=12, pb=26;
+  const vals = data.map(d=>d.bal), safety = DEMO.settings.safety;
+  const mn = Math.min(...vals, safety)*0.9, mx = Math.max(...vals)*1.05;
+  const x = i => pl + i/(data.length-1)*(W-pl-pr), y = v => pt + (1-(v-mn)/(mx-mn))*(H-pt-pb);
+  let line = data.map((d,i)=>`${i?'L':'M'}${x(i).toFixed(1)},${y(d.bal).toFixed(1)}`).join('');
+  const area = line + `L${x(data.length-1)},${H-pb}L${x(0)},${H-pb}Z`;
+  const ticks = 4, grid = [...Array(ticks+1)].map((_,i)=>{ const v = mn + (mx-mn)*i/ticks; return `<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="#2a2e34" stroke-dasharray="3 4"/><text x="${pl-8}" y="${y(v)+4}" fill="#6b7077" font-size="10" text-anchor="end">${(v/1e6).toFixed(1).replace('.',',')} млн</text>`; }).join('');
+  const xl = data.filter((_,i)=>i%5===0).map((d)=>{ const i = data.indexOf(d); return `<text x="${x(i)}" y="${H-8}" fill="#6b7077" font-size="10" text-anchor="middle">${dShort(d.date)}</text>`; }).join('');
+  const minI = vals.indexOf(Math.min(...vals));
+  const evs = data.map((d,i)=> d.ev.some(e=>e.sum<0) ? `<circle cx="${x(i)}" cy="${y(d.bal)}" r="4" fill="#f3f4f2" stroke="#101215" stroke-width="2"/>` : '').join('');
+  $('#cf').innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" id="cfSvg">
+    <defs><linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8f229" stop-opacity=".28"/><stop offset="1" stop-color="#b8f229" stop-opacity="0"/></linearGradient>
+    <filter id="gl"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    ${grid}${xl}
+    <line x1="${pl}" x2="${W-pr}" y1="${y(safety)}" y2="${y(safety)}" stroke="#ff6b6b" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <path d="${area}" fill="url(#ga)"/><path d="${line}" fill="none" stroke="#b8f229" stroke-width="2.4" filter="url(#gl)"/>
+    ${evs}
+    <circle cx="${x(minI)}" cy="${y(vals[minI])}" r="6" fill="none" stroke="#ff6b6b" stroke-width="2"/>
+    <line id="cfCur" x1="0" x2="0" y1="${pt}" y2="${H-pb}" stroke="#8f949b" stroke-width="1" opacity="0"/>
+    <rect x="${pl}" y="${pt}" width="${W-pl-pr}" height="${H-pt-pb}" fill="transparent" id="cfHit"/>
+  </svg>`;
+  $('#cfMin').innerHTML = `минимум <b class="${vals[minI]<safety?'down':''}">${kRub(vals[minI])}</b> · ${dShort(data[minI].date)}`;
+  const svg = $('#cfSvg'), hit = $('#cfHit'), cur = $('#cfCur');
+  hit.addEventListener('mousemove', e => {
+    const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * W;
+    const i = Math.max(0, Math.min(data.length-1, Math.round((px-pl)/(W-pl-pr)*(data.length-1)))), d = data[i];
+    cur.setAttribute('x1', x(i)); cur.setAttribute('x2', x(i)); cur.setAttribute('opacity', .6);
+    showTip(e, `<b>${dShort(d.date)}</b> · ${rub(d.bal)}${d.ev.map(v=>`<br><span class="${v.sum<0?'down':'up'}">${v.sum<0?'−':'+'}${kRub(Math.abs(v.sum))}</span> ${esc(v.name)}`).join('')}`);
+  });
+  hit.addEventListener('mouseleave', () => { hideTip(); cur.setAttribute('opacity',0); });
+}
+function renderChannels(){
+  const mx = Math.max(...DEMO.channels.map(c=>c.margin));
+  $('#channels').innerHTML = DEMO.channels.map(c => `<div class="ch"><b>${c.name}</b><div class="bar"><i style="width:${Math.max(c.margin,0)/mx*100}%"></i></div><span class="num" style="text-align:right">${pct(c.margin)}</span></div><div style="font-size:11px;color:var(--dim);margin:-6px 0 6px 80px">выручка ${kRub(c.rev)}</div>`).join('')
+    + `<div style="font-size:12px;color:var(--muted);margin-top:10px">Маржа считается по юнит-экономике каждого товара. <a href="#products">Разбор по товарам →</a></div>`;
+}
+function renderMinis(){
+  const S = DEMO.sales, st = DEMO.stock;
+  const dlt = (S.today - S.yesterday) / S.yesterday * 100;
+  const fmax = DEMO.funnel[0]?.n || 1;
+  const m = [
+    ['Нам должны', 'дебиторка', `<div class="v num">${kRub(DEMO.receivables.reduce((a,b)=>a+b.sum,0))}</div>${DEMO.receivables.map(r=>`<div class="row">${r.who}<b>${kRub(r.sum)}</b></div>`).join('')}`],
+    ['Продажи сегодня', '', `<div class="v num">${rub(S.today)}</div><div class="row">Вчера<b>${rub(S.yesterday)}</b></div><div class="row">Динамика<b class="${dlt>=0?'up':'down'}">${dlt>=0?'+':''}${pct(dlt)}</b></div><div class="row">Заказов<b>${S.orders}</b></div>`],
+    ['Остатки', '<a href="#products">по складам →</a>', `<div class="v num">${fmt(st.total)} шт</div><div class="row">Хватит в среднем<b>${st.days} дн.</b></div><div class="row">Кончаются<b class="down">${st.oos} SKU</b></div><div class="row">Залежались<b>${st.slow} SKU</b></div>`],
+    isOwner && ['Воронка CRM', '', DEMO.funnel.map(f=>`<div class="row">${f.s}<b>${f.n}</b></div><div class="bar" style="height:5px;margin-bottom:4px"><i style="width:${f.n/fmax*100}%"></i></div>`).join('')]
+  ];
+  $('#minis').innerHTML = m.filter(Boolean).map(c => `<div class="card mini"><h3>${c[0]}${c[1]?`<span class="r" style="color:var(--dim)">${c[1]}</span>`:''}</h3>${c[2]}</div>`).join('');
+}
+
+/* поиск */
+$('#q').addEventListener('input', e => {
+  const q = e.target.value.trim().toLowerCase(), box = $('#sres');
+  if (q.length < 2) { box.classList.remove('show'); return; }
+  const res = [
+    ...tasks.filter(t=>t.t.toLowerCase().includes(q)).map(t=>({n:t.t, s:'Задача · '+t.who, go:'tasks'})),
+    ...deals.filter(d=>(d.co+' '+d.who).toLowerCase().includes(q)).map(d=>({n:d.co, s:'Сделка · '+rub(d.sum), go:'crm'})),
+    ...docs.filter(d=>d.name.toLowerCase().includes(q)).map(d=>({n:d.name, s:'Документ · '+d.src, go:'docs'})),
+    ...DEMO.skus.filter(s=>s.n.toLowerCase().includes(q)).map(s=>({n:s.n, s:'Товар · '+s.ch+' · '+s.art, go:'products'}))
+  ].slice(0,8);
+  box.innerHTML = res.length ? res.map(r=>`<div onclick="go('${r.go}')">${esc(r.n)}<small>${esc(r.s)}</small></div>`).join('') : '<div class="empty">Ничего не нашлось</div>';
+  box.classList.add('show');
+});
+document.addEventListener('click', e => { if (!e.target.closest('.search')) $('#sres').classList.remove('show'); });
+
+/* ================= ЦЕНТР РЕШЕНИЙ ================= */
+let decFilter = 'new';
+$('#decSeg').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; decFilter = b.dataset.f; [...$('#decSeg').children].forEach(x=>x.classList.toggle('on', x===b)); renderDecisions(); });
+const catIc = {'Карточки':['vio','▤'],'Реклама':['amb','₽'],'Склад':['red','▣'],'Цены':['grn','%'],'Финансы':['','≈'],'Опт':['vio','◆']};
+function renderDecisions(){
+  const list = DEMO.decisions.filter(d => { const s = decState[d.id]?.s; return decFilter==='all' || (decFilter==='new' ? !s : s===decFilter); });
+  $('#decList').innerHTML = list.length ? list.map(d => { const s = decState[d.id]; const ic = catIc[d.cat]||['','•'];
+    return `<div class="card dec ${s?'done':''}"><span class="ic ${ic[0]}">${ic[1]}</span>
+      <div><span class="tag">${d.cat}</span> <span class="tag">эвристика · без оценки вероятности</span>
+        <div style="font-size:15px;font-weight:600;margin-top:8px">${esc(d.t)}</div>
+        <div class="why">${esc(d.why)}</div>
+        ${s ? `<div style="font-size:12px;color:var(--muted)">${{accepted:'✓ Принято, задача поставлена',later:'⏸ Отложено',rejected:'✕ Отклонено'}[s.s]}${s.r?': '+esc(s.r):''} · <a href="#" onclick="decSet('${d.id}',null);return false">вернуть</a></div>` :
+        `<div class="acts"><button class="btn sm g" onclick="decSet('${d.id}','accepted')">Принять</button><button class="btn sm" onclick="decSet('${d.id}','later')">Отложить</button><button class="btn sm rd" onclick="document.getElementById('rs${d.id}').classList.add('show')">Отклонить</button></div>
+        <div class="reason" id="rs${d.id}"><input id="ri${d.id}" placeholder="Почему отклоняем? причина сохранится в этом браузере"><button class="btn sm rd" onclick="decSet('${d.id}','rejected',document.getElementById('ri${d.id}').value)">ОК</button></div>`}
+      </div>
+      <div class="imp">${d.imp?`<b class="num">+${kRub(d.imp)}</b><span style="font-size:11px;color:var(--muted)">в месяц</span>`:d.free?`<b class="num">${kRub(d.free)}</b><span style="font-size:11px;color:var(--muted)">условная стоимость товара</span>`:`<b style="font-size:14px;color:var(--cyan)">сценарий риска</b><span style="font-size:11px;color:var(--muted)">кассового разрыва</span>`}</div></div>`; }).join('')
+    : '<div class="card empty">Здесь пусто. Автоматического обновления нет; верните исходный пример или смените фильтр</div>';
+  $('#decSum').textContent = rub(DEMO.decisions.filter(d=>decState[d.id]?.s==='accepted').reduce((a,d)=>a+d.imp,0));
+}
+function decSet(id, s, r){
+  if (s===null) delete decState[id]; else decState[id] = {s, r: r||''};
+  if (s==='accepted') { const d = DEMO.decisions.find(x=>x.id===id); if (!tasks.some(t=>t.dec===id)) { tasks.push({id:Date.now(), t:d.t, who:DEMO.owner, pri:'hi', due:iso(addD(TODAY,1)), col:0, ai:true, dec:id}); LS.set('tasks',tasks); } toast('Решение принято, задача на доске'); }
+  if (s==='later') toast('Отложено в этом браузере; напоминание не отправляется');
+  if (s==='rejected') toast('Отклонено, причина сохранена');
+  LS.set('decisions', decState); renderDecisions(); renderNav();
+}
+
+/* ================= АНАЛИТИКА ================= */
+$('#chSel').addEventListener('change', renderAnalytics);
+function renderAnalytics(){
+  const ch = $('#chSel').value, R = periodRange(), weeklyMode = PERIOD === 'quarter';
+  const from = R.from;   // для недель начинаем с понедельника, без обрезка
+  const rows = DEMO.rnp.filter(r => inR(r.date, from, TODAY) && (ch==='all' || r.ch===ch));
+  const weekly = PERIOD === 'quarter';   // 90 дней удобнее смотреть по неделям
+  const byDay = {};
+  rows.forEach(r => { const d0 = weekly ? addD(r.date, -((r.date.getDay()+6)%7)) : r.date; const k = iso(d0); const o = byDay[k] ||= {date:d0, views:0, clicks:0, cart:0, orders:0, buy:0, rev:0, ads:0, contrib:0}; ['views','clicks','cart','orders','buy','rev','ads','contrib'].forEach(f=>o[f]+=r[f]); });
+  $('#aChartT').textContent = 'Выручка и ДРР ' + (weekly ? 'по неделям' : 'по дням');
+  $('#rnpT').innerHTML = 'Воронка ' + (weekly ? 'по неделям' : 'по дням');
+  const days = Object.values(byDay).sort((a,b)=>a.date-b.date);
+  const tot = days.reduce((a,d)=>{ ['views','clicks','cart','orders','buy','rev','ads','contrib'].forEach(f=>a[f]=(a[f]||0)+d[f]); return a; }, {});
+  const marg = r => r.rev ? r.contrib/r.rev*100 : 0; // 19% комиссия и логистика (демо)
+  const drr = tot.ads/tot.rev*100;
+  $('#aKpis').innerHTML = [
+    ['Выручка', rub(tot.rev)], ['Заказы', fmt(tot.orders)+' шт'],
+    [`ДРР ${hint('drr')}`, `<span class="${drr>DEMO.settings.maxDRR?'down':'up'}">${pct(drr)}</span>`], [`Маржа после рекламы ${hint('margin_ads')}`, pct(marg(tot))]
+  ].map(c=>`<div class="card kpi"><h3>${c[0]}</h3><div class="v num">${c[1]}</div><div class="d">${R.label} · WB и Ozon</div></div>`).join('');
+  // воронка карточек (переехала с Главной)
+  const steps = [['Показы',tot.views,''],['Клики',tot.clicks,'CTR'],['Корзины',tot.cart,'в корзину'],['Заказы',tot.orders,'в заказ'],['Выкупы',tot.buy,'выкуп']];
+  $('#trafLbl').textContent = R.label;
+  $('#traffic').innerHTML = `<div class="funnel">${steps.map((st,i)=>`<div class="fst"><div style="font-size:12px;color:var(--muted)">${st[0]}</div><div class="num" style="font-size:22px;font-weight:400;margin:4px 0">${fmt(st[1])}</div>${i?`<div style="font-size:12px"><b class="up">${pct(st[1]/steps[i-1][1]*100)}</b> <span style="color:var(--dim)">${st[2]}</span></div>`:'<div style="font-size:12px;color:var(--dim)">из поиска и каталога</div>'}<div class="bar" style="height:6px;margin-top:8px"><i style="width:${Math.max(st[1]/steps[0][1]*100,1.5)}%"></i></div></div>`).join('')}</div>`;
+  // график
+  const W=760,H=230,pl=50,pr=40,pt=14,pb=26, n=days.length, bw=(W-pl-pr)/n;
+  const mxR = Math.max(...days.map(d=>d.rev))*1.1, mxD = Math.max(20, ...days.map(d=>d.ads/d.rev*100));
+  const y = v => pt+(1-v/mxR)*(H-pt-pb), y2 = v => pt+(1-v/mxD)*(H-pt-pb);
+  const bars = days.map((d,i)=>`<rect class="ab" data-i="${i}" x="${pl+i*bw+bw*.18}" y="${y(d.rev)}" width="${bw*.64}" height="${H-pb-y(d.rev)}" rx="3" fill="url(#gb)"/>`).join('');
+  const dl = days.map((d,i)=>`${i?'L':'M'}${pl+i*bw+bw/2},${y2(d.ads/d.rev*100)}`).join('');
+  const xl = days.map((d,i)=> (n<=16 || i%3===0) ? `<text x="${pl+i*bw+bw/2}" y="${H-8}" fill="#6b7077" font-size="10" text-anchor="middle">${weekly ? dShort(d.date) : new Date(d.date).getDate()}</text>`:'').join('');
+  const gr = [0,.25,.5,.75,1].map(t=>`<line x1="${pl}" x2="${W-pr}" y1="${y(mxR*t)}" y2="${y(mxR*t)}" stroke="#2a2e34" stroke-dasharray="3 4"/><text x="${pl-6}" y="${y(mxR*t)+4}" fill="#6b7077" font-size="10" text-anchor="end">${fmt(mxR*t/1000)}к</text><text x="${W-pr+6}" y="${y2(mxD*t)+4}" fill="#6b7077" font-size="10">${Math.round(mxD*t)}%</text>`).join('');
+  $('#aChart').innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}"><defs><linearGradient id="gb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8f229"/><stop offset="1" stop-color="#b8f229" stop-opacity=".35"/></linearGradient></defs>${gr}${bars}${xl}
+    <line x1="${pl}" x2="${W-pr}" y1="${y2(DEMO.settings.maxDRR)}" y2="${y2(DEMO.settings.maxDRR)}" stroke="#ff6b6b" stroke-dasharray="6 4"/>
+    <path d="${dl}" fill="none" stroke="#ffc24b" stroke-width="2.2"/>${days.map((d,i)=>`<circle cx="${pl+i*bw+bw/2}" cy="${y2(d.ads/d.rev*100)}" r="2.6" fill="#ffc24b"/>`).join('')}</svg>`;
+  document.querySelectorAll('#aChart .ab').forEach(b => { b.addEventListener('mousemove', e => { const d = days[b.dataset.i]; showTip(e, `<b>${weekly?'неделя с ':''}${dShort(d.date)}</b><br>Выручка ${rub(d.rev)}<br>Заказы ${d.orders}<br>Реклама ${rub(d.ads)} · ДРР ${pct(d.ads/d.rev*100)}`); }); b.addEventListener('mouseleave', hideTip); });
+  // таблица РНП
+  const H2 = [weekly?'Неделя с':'Дата','Показы','Клики',`CTR ${hint('ctr')}`,'Корзины','Заказы',`Выкупы ${hint('buyout')}`,'Выручка','Реклама',`ДРР ${hint('drr')}`,'Маржа'];
+  $('#rnp').innerHTML = `<tr>${H2.map((h,i)=>`<th class="${i?'r':''}">${h}</th>`).join('')}</tr>` + [...days].reverse().map(d => { const dr = d.ads/d.rev*100;
+    return `<tr><td>${dShort(d.date)}</td><td class="r">${fmt(d.views)}</td><td class="r">${fmt(d.clicks)}</td><td class="r">${pct(d.clicks/d.views*100)}</td><td class="r">${fmt(d.cart)}</td><td class="r">${fmt(d.orders)}</td><td class="r">${fmt(d.buy)}</td><td class="r">${rub(d.rev)}</td><td class="r">${rub(d.ads)}</td><td class="r ${dr>DEMO.settings.maxDRR?'down':''}">${pct(dr)}</td><td class="r">${pct(marg(d))}</td></tr>`; }).join('')
+    + `<tr style="font-weight:600"><td>Итого</td><td class="r">${fmt(tot.views)}</td><td class="r">${fmt(tot.clicks)}</td><td class="r">${pct(tot.clicks/tot.views*100)}</td><td class="r">${fmt(tot.cart)}</td><td class="r">${fmt(tot.orders)}</td><td class="r">${fmt(tot.buy)}</td><td class="r">${rub(tot.rev)}</td><td class="r">${rub(tot.ads)}</td><td class="r">${pct(drr)}</td><td class="r">${pct(marg(tot))}</td></tr>`;
+  // ABC
+  const sk = DEMO.skus.filter(s => ch==='all' || s.ch===ch).map(s=>skuPeriod(s,R.from,R.to)).sort((a,b)=>b.rev-a.rev), sum = sk.reduce((a,s)=>a+s.rev,0); let acc = 0;
+  $('#sku').innerHTML = `<tr><th>Товар</th><th>Канал</th><th class="r">Продано</th><th class="r">Выручка</th><th class="r">Доля</th><th class="r">Маржа</th><th>ABC ${hint('abc')}</th></tr>` + sk.map(s => { const sh = sum?acc/sum:0; acc += s.rev; const g = sh<=.8?'A':sh<=.95?'B':'C';
+    return `<tr><td>${esc(s.n)}</td><td>${s.ch}</td><td class="r">${fmt(s.q)}</td><td class="r">${rub(s.rev)}</td><td class="r">${pct(s.rev/sum*100)}</td><td class="r ${s.m<0?'down':s.m>18?'up':''}">${pct(s.m)}</td><td><span class="tag ${g==='A'?'lo':g==='B'?'mid':'hi'}">${g}</span></td></tr>`; }).join('');
+}
+
+/* ================= КАНБАН (общий) ================= */
+function kanban(el, cols, items, colKey, cardHTML, onMove, colHead){
+  el.innerHTML = cols.map((c,ci) => { const its = items.filter(i=>i[colKey]===ci);
+    return `<div class="col" data-c="${ci}"><h4>${c} <span class="c">${its.length}</span></h4>${colHead?`<div class="sum">${colHead(its)}</div>`:'<div style="height:8px"></div>'}${its.map(i=>`<div class="kc" draggable="true" data-id="${i.id}">${cardHTML(i, ci, cols.length)}</div>`).join('') || '<div class="empty">Перетащите сюда</div>'}</div>`; }).join('');
+  el.querySelectorAll('.kc').forEach(k => {
+    k.addEventListener('dragstart', e => { k.classList.add('drag'); e.dataTransfer.setData('text', k.dataset.id); });
+    k.addEventListener('dragend', () => k.classList.remove('drag'));
+  });
+  el.querySelectorAll('.col').forEach(c => {
+    c.addEventListener('dragover', e => { e.preventDefault(); c.classList.add('over'); });
+    c.addEventListener('dragleave', () => c.classList.remove('over'));
+    c.addEventListener('drop', e => { e.preventDefault(); c.classList.remove('over'); onMove(+e.dataTransfer.getData('text'), +c.dataset.c); });
+  });
+}
+const mvBtns = (id, ci, n, fn) => `<span class="mv">${ci>0?`<button onclick="event.stopPropagation();${fn}(${id},-1)" title="Назад">‹</button>`:''}${ci<n-1?`<button onclick="event.stopPropagation();${fn}(${id},1)" title="Дальше">›</button>`:''}</span>`;
+
+/* ================= ЗАДАЧИ ================= */
+const PRI = {hi:'Высокий', mid:'Средний', lo:'Низкий'};
+['#fWho','#tWho','#dMgr'].forEach(s => DEMO.team.forEach(p => $(s).insertAdjacentHTML('beforeend', `<option>${p}</option>`)));
+DEMO.taskCols.forEach((c,i) => $('#tCol').insertAdjacentHTML('beforeend', `<option value="${i}">${c}</option>`));
+DEMO.dealStages.forEach((c,i) => $('#dStage').insertAdjacentHTML('beforeend', `<option value="${i}">${c}</option>`));
+['#fWho','#fPri','#fAI'].forEach(s => $(s).addEventListener('change', renderTasks));
+function renderTasks(){
+  const w = $('#fWho').value, p = $('#fPri').value, ai = $('#fAI').checked;
+  const list = tasks.filter(t => (!w||t.who===w) && (!p||t.pri===p) && (!ai||t.ai));
+  kanban($('#taskBoard'), DEMO.taskCols, list, 'col', (t, ci, n) => { const late = t.col<3 && new Date(t.due) < TODAY;
+    return `<div class="t" onclick="openTask(${t.id})" style="cursor:pointer">${esc(t.t)}</div><div class="m"><span class="tag ${t.pri}">${PRI[t.pri]}</span>${t.ai?'<span class="tag ai">✦ создано правилом</span>':''}</div>
+      <div class="m" style="margin-top:8px"><span class="av">${initials(t.who)}</span>${esc(t.who)} · <span class="${late?'late':''}">${late?'просрочено ':''}${dShort(t.due)}</span>${mvBtns(t.id, ci, n, 'moveTask')}</div>`; },
+    (id, c) => { const t = tasks.find(x=>x.id===id); if (t) { t.col = c; LS.set('tasks', tasks); renderTasks(); } });
+}
+function moveTask(id, d){ const t = tasks.find(x=>x.id===id); t.col = Math.max(0, Math.min(DEMO.taskCols.length-1, t.col+d)); LS.set('tasks',tasks); renderTasks(); }
+let editTask = null;
+function openTask(id){
+  editTask = id ?? null; const t = tasks.find(x=>x.id===id) || {t:'', who:DEMO.owner, pri:'mid', due:iso(addD(TODAY,2)), col:0};
+  $('#mTaskT').textContent = id ? 'Задача' : 'Новая задача';
+  $('#tTitle').value = t.t; $('#tWho').value = t.who; $('#tPri').value = t.pri; $('#tDue').value = t.due; $('#tCol').value = t.col;
+  $('#tDel').style.display = id ? '' : 'none'; $('#tDel').onclick = () => { tasks = tasks.filter(x=>x.id!==id); LS.set('tasks',tasks); closeM('mTask'); renderTasks(); toast('Задача удалена'); };
+  $('#mTask').classList.add('show'); setTimeout(()=>$('#tTitle').focus(), 50);
+}
+function saveTask(){
+  const v = {t:$('#tTitle').value.trim(), who:$('#tWho').value, pri:$('#tPri').value, due:$('#tDue').value || iso(TODAY), col:+$('#tCol').value};
+  if (!v.t) { $('#tTitle').focus(); return; }
+  if (editTask) Object.assign(tasks.find(x=>x.id===editTask), v); else tasks.push({id:Date.now(), ai:false, ...v});
+  LS.set('tasks', tasks); closeM('mTask'); if ((location.hash||'#home')==='#tasks') renderTasks(); else toast('Задача добавлена');
+}
+
+/* ================= CRM ================= */
+function renderCRM(){
+  const st = DEMO.dealStages, paid = deals.filter(d=>d.st===st.length-1), open = deals.filter(d=>d.st<st.length-1);
+  $('#crmKpis').innerHTML = [
+    ['В работе', kRub(open.reduce((a,d)=>a+d.sum,0)), open.length+' сделок'],
+    ['Оплачено', kRub(paid.reduce((a,d)=>a+d.sum,0)), paid.length+' сделок'],
+    ['Конверсия в оплату', pct(paid.length/(deals.length||1)*100), 'от всех сделок'],
+    ['Средняя сумма сделки', kRub(deals.reduce((a,d)=>a+d.sum,0)/(deals.length||1)), 'по всем этапам']
+  ].map(c=>`<div class="card kpi"><h3>${c[0]}</h3><div class="v num">${c[1]}</div><div class="d">${c[2]}</div></div>`).join('');
+  kanban($('#crmBoard'), st, deals, 'st', (d, ci, n) => `<div class="t" onclick="openDeal(${d.id})" style="cursor:pointer">${esc(d.co)}</div><div class="amt num">${rub(d.sum)}</div>
+      ${d.note?`<div style="font-size:12px;color:var(--muted);margin-bottom:6px">${esc(d.note)}</div>`:''}<div class="m"><span class="av">${initials(d.mgr)}</span>${esc(d.mgr)}${mvBtns(d.id, ci, n, 'moveDeal')}</div>`,
+    (id, c) => { const d = deals.find(x=>x.id===id); if (d) { d.st = c; LS.set('deals', deals); renderCRM(); } },
+    its => `${kRub(its.reduce((a,d)=>a+d.sum,0))}`);
+}
+function moveDeal(id, dd){ const d = deals.find(x=>x.id===id); d.st = Math.max(0, Math.min(DEMO.dealStages.length-1, d.st+dd)); LS.set('deals',deals); renderCRM(); }
+let editDeal = null;
+function openDeal(id){
+  editDeal = id ?? null; const d = deals.find(x=>x.id===id) || {co:'', who:'', sum:'', st:0, mgr:DEMO.owner, note:''};
+  $('#mDealT').textContent = id ? 'Сделка' : 'Новая сделка';
+  $('#dCo').value = d.co; $('#dWho').value = d.who; $('#dSum').value = d.sum; $('#dStage').value = d.st; $('#dMgr').value = d.mgr; $('#dNote').value = d.note;
+  $('#dDel').style.display = id ? '' : 'none'; $('#dDel').onclick = () => { deals = deals.filter(x=>x.id!==id); LS.set('deals',deals); closeM('mDeal'); renderCRM(); toast('Сделка удалена'); };
+  $('#mDeal').classList.add('show'); setTimeout(()=>$('#dCo').focus(), 50);
+}
+function saveDeal(){
+  const v = {co:$('#dCo').value.trim(), who:$('#dWho').value.trim(), sum:+$('#dSum').value||0, st:+$('#dStage').value, mgr:$('#dMgr').value, note:$('#dNote').value.trim()};
+  if (!v.co) { $('#dCo').focus(); return; }
+  if (editDeal) Object.assign(deals.find(x=>x.id===editDeal), v); else deals.push({id:Date.now(), ...v});
+  LS.set('deals', deals); closeM('mDeal'); if ((location.hash||'#home')==='#crm') renderCRM(); else toast('Сделка добавлена');
+}
+
+/* ================= ДОКУМЕНТЫ ================= */
+const stTag = s => `<span class="st ${{'Разобран':'ok','На проверке':'wait','Новый':'new','Ошибка':'err'}[s]||''}">${s}</span>`;
+[...new Set(DEMO.documents.map(d=>d.src).concat('Загрузка'))].forEach(s => $('#fSrc').insertAdjacentHTML('beforeend', `<option>${s}</option>`));
+['#fSrc','#fSt'].forEach(s => $(s).addEventListener('change', renderDocs));
+function renderDocs(){
+  const s = $('#fSrc').value, t = $('#fSt').value;
+  const list = docs.filter(d => (!s||d.src===s) && (!t||d.st===t));
+  $('#docTbl').innerHTML = `<tr><th>Документ</th><th>Источник</th><th>Тип</th><th class="r">Сумма</th><th>Дата</th><th>Статус</th></tr>` +
+    (list.map(d => `<tr><td>${esc(d.name)}</td><td>${esc(d.src)}</td><td>${esc(d.type)}</td><td class="r num">${d.sum?rub(d.sum):'—'}</td><td>${dShort(d.date)}</td><td>${stTag(d.st)}</td></tr>`).join('') || `<tr><td colspan="6" class="empty">Нет документов под этот фильтр</td></tr>`);
+}
+$('#upl').addEventListener('change', e => {
+  const f = [...e.target.files]; if (!f.length) return;
+  f.forEach(x => docs.unshift({name:x.name, src:'Загрузка', type:x.name.split('.').pop().toUpperCase(), sum:0, date:iso(TODAY), st:'Новый'}));
+  LS.set('docs', docs); e.target.value = ''; renderDocs(); toast('Добавлены только имена файлов: ' + f.length);
+});
+
+/* ================= ИНТЕГРАЦИИ ================= */
+function renderInts(){
+  $('#ints').innerHTML = DEMO.integrations.map((it,i) => `<div class="card int"><div class="hd"><span class="lg" style="background:${it.c};box-shadow:0 0 18px ${it.c}66">${it.k}</span><div><b>${it.n}</b><div style="font-size:11px;margin-top:3px"><span class="dot ${it.st==='ok'?'ok':it.st==='off'?'off':''}" style="display:inline-block;margin-right:5px"></span><span style="color:var(--muted)">${it.st==='ok'?'подключено':it.st==='demo'?'демо-данные':'не подключено'}</span></div></div></div>
+    <p>${it.d}</p><button class="btn sm" onclick="howInt(${i})">Как подключить</button></div>`).join('');
+}
+function howInt(i){const it=DEMO.integrations[i];$('#mIntT').textContent=it.n;$('#mIntB').innerHTML='<p>'+esc(it.how)+'</p><p>Здесь нет полей ключей и реальных подключений. Состав внедрения согласовывается отдельно.</p>';$('#mInt').classList.add('show');}
+
+/* ================= модалки ================= */
+function closeM(id){ $('#'+id).classList.remove('show'); }
+document.querySelectorAll('.ov').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+document.addEventListener('keydown', e => { if (e.key==='Escape') { document.querySelectorAll('.ov.show').forEach(o=>o.classList.remove('show')); closeAI(); } });
+
+/* ================= Подсказки · имитация ИИ (демо, правила) ================= */
+const CHIPS = ['Как идём по плану?','Какие товары в минусе?','Где горит реклама?','Что кончается на складе?','Хватит ли денег в этом месяце?','Какие ограничения модели?','Сколько удержали площадки?'];
+$('#chips').innerHTML = CHIPS.map(c=>`<button>${c}</button>`).join('');
+$('#chips').addEventListener('click', e => { if (e.target.tagName==='BUTTON') { $('#aiIn').value = e.target.textContent; ask(); } });
+$('#aiIn').addEventListener('keydown', e => { if (e.key==='Enter') ask(); });
+function openAI(){ $('#ai').classList.add('show'); if (!$('#msgs').children.length) say('bot', `Привет! Я пока работаю на демо-цифрах и простых правилах. Спросите про план, рекламу, остатки, деньги или налоги.`); setTimeout(()=>$('#aiIn').focus(), 250); }
+function closeAI(){ $('#ai').classList.remove('show'); }
+function say(who, t){ $('#msgs').insertAdjacentHTML('beforeend', `<div class="msg ${who}">${esc(t)}</div>`); $('#msgs').scrollTop = 1e6; }
+function ask(){const q=$('#aiIn').value.trim();if(!q)return;$('#aiIn').value='';say('me',q);const r=periodRange(),f=finFor(r.from,r.to,r.month),losers=DEMO.skus.filter(s=>unit(s).profit<0);say('bot','Локальная подсказка по выбранному периоду: выручка '+rub(f.rev)+', результат модели '+rub(f.profit)+'. Убыточных товаров: '+losers.length+'. Это шаблонный ответ по числам, без ИИ и без подключения внешнего сервиса.');}
+const qn=n=>String(n).includes('«')?n:'«'+n+'»';
+const plural=(n,one,few,many)=>n%10===1&&n%100!==11?one:n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?few:many;
+function buildInsights(){
+  const S = DEMO.settings, M = DEMO.mix, feed = [], dec = [];
+  const add = (ic, t, s, src='риск') => feed.push({ic, t, s, src});
+  const monthFrom = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1), mtd = sumDaily(monthFrom, TODAY);
+  const dim = new Date(TODAY.getFullYear(), TODAY.getMonth()+1, 0).getDate();
+  const U = DEMO.skus.map(k => ({k, u:unit(k), tot:k.wh.reduce((a,b)=>a+b,0)}));
+
+  // каналы: выручка месяца по долям, маржа по юнит-экономике товаров
+  const chMargin = ch => { const l = U.filter(x=>x.k.ch===ch); const w = l.reduce((a,x)=>a+x.u.sp*x.k.perDay,0); return w ? l.reduce((a,x)=>a+x.u.profit*x.k.perDay,0)/w*100 : 0; };
+  const mp = mtd*M.mp;
+  DEMO.channels = [{name:'WB', rev:mp*M.wb, margin:chMargin('WB')}, {name:'Ozon', rev:mp*(1-M.wb), margin:chMargin('Ozon')},
+    ...(DEMO.extraChannels||[]).map(e => ({name:e.name, rev:mtd*e.share, margin:e.margin}))].filter(c => c.rev > 0);
+  // сводки для маленьких карточек
+  const dl = DEMO.daily, t0 = dl.at(-1)?.total || 0, t1 = dl.at(-2)?.total || 0;
+  DEMO.sales = { today:t0, yesterday:t1, orders:Math.round(t0*M.mp/(M.check[0]+M.check[1]/2)) };
+  const totAll = U.reduce((a,x)=>a+x.tot,0), perDayAll = DEMO.skus.reduce((a,k)=>a+k.perDay,0);
+  DEMO.stock = { total:totAll, days:Math.round(totAll/Math.max(perDayAll,1)), oos:U.filter(x=>x.tot/x.k.perDay<10).length, slow:U.filter(x=>x.tot/x.k.perDay>90).length };
+
+  // 1. деньги
+  const m = DEMO.cashflow.reduce((a,b)=>b.bal<a.bal?b:a);
+  if (m.bal < S.safety*1.15) {
+    add('red', `${dShort(m.date)} остаток упадёт до ${kRub(m.bal)}`, m.bal < S.safety ? `Это ниже порога безопасности ${kRub(S.safety)}, риск кассового разрыва` : `Совсем рядом с порогом безопасности ${kRub(S.safety)}`);
+    const big = DEMO.cashflow.filter(d=>d.date<=m.date).flatMap(d=>d.ev.filter(e=>e.sum<0).map(e=>({...e, date:d.date}))).sort((a,b)=>a.sum-b.sum)[0];
+    if (big) dec.push({id:'cash', cat:'Финансы', t:`Сдвинуть платёж ${qn(big.name)} на несколько дней`, why:`${dShort(m.date)} остаток падает до ${kRub(m.bal)} при пороге ${kRub(S.safety)}. Самый крупный платёж перед этим: ${kRub(-big.sum)} ${dShort(big.date)}. Если перенести его на дни после ближайшей выплаты площадки, разрыва не будет.`, imp:0, conf:90});
+  }
+  const perDayRev=mtd/TODAY.getDate();
+  // 3. точка безубыточности
+  const be = fixedMonth()/(1-varShare()), proj = perDayRev*dim;
+  if (proj < be) add('red', 'Месяц идёт ниже точки безубыточности', `Прогноз выручки ${kRub(proj)} при точке ${kRub(be)}. Без роста продаж месяц закроется в минус`);
+  // 4. реклама по каналам за 14 дней
+  ['WB','Ozon'].forEach(ch => { const r = DEMO.rnp.filter(x => x.ch===ch && x.date > addD(TODAY,-14)); const rev = r.reduce((a,x)=>a+x.rev,0), ads = r.reduce((a,x)=>a+x.ads,0);
+    if (!rev) return; const drr = ads/rev*100;
+    if (drr > S.maxDRR) {
+      add('amb', `ДРР на ${ch} ${pct(drr)} при пределе ${S.maxDRR}%`, `За 14 дней реклама ${kRub(ads)} при выручке ${kRub(rev)}`, 'ИИ');
+      dec.push({id:'ads-'+ch, cat:'Реклама', t:`Снизить ДРР на ${ch} до ${S.maxDRR}%`, why:`За 14 дней реклама на ${ch} обошлась в ${kRub(ads)} при выручке ${kRub(rev)}, это ${pct(drr)}. Отключите кампании с ДРР выше 20% и снизьте ставки в остальных до предела.`, imp:Math.round((drr-S.maxDRR)/100*rev/14*30), conf:82});
+    } });
+  // 5. товары
+  U.forEach(({k, u, tot}) => { const days = tot/k.perDay;
+    if (u.profit < 0) {
+      const top = [...u.costs].sort((a,b)=>b[1]-a[1]).slice(0,2).map(c=>c[0].toLowerCase()).join(' и ');
+      const need = Math.ceil(-u.profit/(1-(k.comm+S.taxPct)/100)/u.sp*100) + 2;
+      add('red', `Продаётся в минус: ${qn(k.n)}`, `${rub(u.profit)} с каждой продажи. Разбор в разделе Товары`);
+      dec.push({id:'minus-'+k.art, cat:'Цены', t:`Вывести из минуса: ${qn(k.n)}`, why:`С каждой продажи ${rub(u.profit)}. Больше всего съедают ${top}. Нужна цена примерно на ${need}% выше, меньше рекламы на этот товар или вывод его из ассортимента.`, imp:Math.round(-u.profit*k.perDay*30), conf:75});
+    } else if (u.margin < 5) add('amb', `Почти в ноль: ${qn(k.n)}`, `Маржа ${pct(u.margin)}, ${rub(u.profit)} со штуки`, 'ИИ');
+    if (days < 10) {
+      add('red', `Закончится через ${Math.max(0, Math.round(days))} дн.: ${qn(k.n)}`, `Продаётся ${k.perDay.toFixed(2).replace('.',',')} шт в день${k.transit?`, в пути ${k.transit} шт`:''}`);
+      if (u.profit > 0) dec.push({id:'stock-'+k.art, cat:'Склад', t:`Проверить поставку: ${qn(k.n)}`, why:`Остаток ${tot} шт, продажи ${k.perDay.toFixed(2).replace('.',',')} шт в день${k.transit?`, в пути ${k.transit} шт`:''}. Проверить дату приёмки ожидаемой поставки и подтвердить, нужен ли дополнительный заказ.`, imp:Math.round(u.profit*k.perDay*Math.max(7, 30-days-k.transit/k.perDay)), conf:78});
+    }
+    if (days > 120) dec.push({id:'slow-'+k.art, cat:'Склад', t:`Распродать залежи: ${qn(k.n)}`, why:`Запаса на ${Math.round(days)} дн., в товаре заморожено ${kRub(tot*k.cogs)}. Скидка 10-15% или участие в акции площадки освободит деньги и снизит плату за хранение.`, imp:0, free:tot*k.cogs, conf:70});
+    if (k.buy < 75) add('amb', `Низкий выкуп ${k.buy}%: ${qn(k.n)}`, 'Проверьте размеры, фото и описание: покупатель ждёт другое', 'ИИ');
+    if (k.neg7 >= 3) add('amb', `${qn(k.n)}: ${k.neg7} негативных отзыва за неделю`, `Рейтинг ${k.rating.toFixed(1).replace('.',',')}, без ответа ${k.unans}. Найдите общую причину`);
+  });
+  // 6. пустые склады
+  const st = stockStats(); if (st.oos) add('amb', `${st.oos} ${plural(st.oos,'склад','склада','складов')} с нулевым остатком`, `Условная оценка до ${kRub(st.lost)} выручки в неделю`);
+  // 7. удержания: самый быстрый рост
+  const hg = DEMO.holdsWeek.filter(h => h.v > 0 && h.prev > 0).map(h => ({...h, g:(h.v-h.prev)/h.prev*100})).sort((a,b)=>b.g-a.g)[0];
+  if (hg && hg.g > 40) add('amb', `${hg.n}: +${Math.round(hg.g)}% за неделю`, `${rub(hg.v)} против ${rub(hg.prev)} неделей раньше`);
+  // 8. позиции в поиске
+  DEMO.seo.filter(q => q.pos - q.was >= 8).forEach(q => add('amb', `Запрос «${q.q}»: позиция упала с ${q.was} до ${q.pos}`, `Товар ${qn(q.sku)}. Проверьте цену, остатки и рекламу`, 'ИИ'));
+  // 9. каналы
+  const mc = DEMO.channels.filter(c => c.name==='WB' || c.name==='Ozon').sort((a,b)=>b.margin-a.margin);
+  if (mc.length === 2 && mc[0].margin - mc[1].margin > 3) add('grn', `На ${mc[0].name} маржа выше на ${(mc[0].margin-mc[1].margin).toFixed(1).replace('.',',')} п.`, 'Есть смысл перевести туда часть рекламного бюджета', 'ИИ');
+  // 10. Честный знак и документы
+  const C = DEMO.cz; if (C && C.applied > C.inCirculation) add('amb', `${fmt(C.applied - C.inCirculation)} ${plural(C.applied - C.inCirculation,'код','кода','кодов')} ЧЗ не введены в оборот`, 'Учебный пример: статус маркировки требует проверки');
+  const nd = docs.filter(d => d.st==='Новый' || d.st==='На проверке').length; if (nd) add('amb', `${nd} ${nd===1?'документ ждёт':'документа ждут'} разбора`, 'Раздел Документы');
+  (DEMO.notes || []).forEach(n => add(n.ic, n.t, n.s, n.src || 'риск'));
+  DEMO.feed = feed;
+  DEMO.decisions = [...dec, ...(DEMO.decisions || [])].sort((a,b) => (b.imp||0)-(a.imp||0));
+}
+
+/* ================= ВЫБОР МАГАЗИНА ================= */
+function openStores(first){
+  if (first) try { localStorage.setItem('tatyana_demo_brandos_v3_welcomed', '1'); } catch(e) {}
+  $('#mStoreIntro').style.display = first ? '' : 'none';
+  $('#storeList').innerHTML = Object.entries(STORES).map(([id, st]) => `<button class="store-card ${id===STORE?'on':''}" onclick="pickStore('${id}')">
+    <b>${esc(st.name)}</b><span class="niche">${esc(st.niche)}</span><span class="about">${esc(st.about)}</span></button>`).join('');
+  $('#mStore').classList.add('show');
+}
+function pickStore(id){
+  try { localStorage.setItem('tatyana_demo_brandos_v3_store', id); localStorage.setItem('tatyana_demo_brandos_v3_welcomed', '1'); } catch(e) {}
+  if (id === STORE) { closeM('mStore'); return; }
+  location.hash = 'home'; location.reload();
+}
+
+/* ================= ПОДСКАЗКИ К МЕТРИКАМ ================= */
+const GLOSS = {
+  profit:['Результат после расходов','Выручка минус всё: себестоимость, комиссии, логистика, хранение, реклама, удержания, налог, зарплаты, аренда. Сколько бизнес реально заработал за период. Деньги на счёте и прибыль часто не совпадают: часть прибыли может лежать в товаре.'],
+  margin:['Маржинальность','Результат после расходов, делённая на выручку. Сколько копеек остаётся с каждого рубля продаж. Если маржа падает при растущей выручке, где-то растут расходы: реклама, логистика, штрафы.'],
+  plan:['План месяца','Цель по выручке на месяц из Настроек. Справа видно, отстаёте вы или идёте с опережением, и сколько нужно продавать в день, чтобы выйти на план.'],
+  safety:['Порог безопасности','Минимальный остаток на счетах, ниже которого лучше не опускаться: запас на внезапные платежи. Задаётся в Настройках. Если линия прогноза подходит к красной черте, это риск кассового разрыва: сдвигайте платёж или ускоряйте поступления.'],
+  drr:['ДРР, доля рекламных расходов','Реклама / выручка × 100%. Сколько процентов выручки уходит на рекламу. Пример: потратили 12 000 ₽, продали на 100 000 ₽, ДРР 12%. Предел задаётся в Настройках, всё выше подсвечивается красным.'],
+  margin_ads:['Маржа после рекламы','Что остаётся от выручки после себестоимости, комиссий с логистикой и рекламы. Быстрый индикатор: окупается ли реклама в этот период.'],
+  ctr:['CTR и воронка','CTR = клики / показы. Показывает, цепляет ли карточка в выдаче: главное фото, цена, рейтинг. Дальше конверсия в корзину (работает контент карточки), в заказ (цена и сроки доставки) и выкуп.'],
+  buyout:['Процент выкупа','Сколько заказов покупатели реально забрали. Невыкупленный товар едет обратно, и логистику в обе стороны платите вы. Низкий выкуп часто из-за размеров, качества или фото, которые не совпадают с товаром.'],
+  abc:['ABC-анализ','Товары по вкладу в выручку. A: дают первые 80% выручки, их нельзя допускать до нуля на складе. B: следующие 15%. C: последние 5%, кандидаты на вывод или пересмотр цены.'],
+  spp:['СПП и цена для покупателя','СПП на WB это скидка постоянного покупателя, её оплачивает сама площадка. Покупатель видит цену ниже вашей, а комиссия и ваша выплата считаются от вашей цены. Когда площадка урезает СПП, цена для покупателя растёт и продажи могут просесть, хотя вы ничего не меняли.'],
+  nonbuy:['Невыкупы и возвраты','Логистика туда и обратно по невыкупленным заказам, разложенная на каждую выкупленную штуку. При выкупе 90% это копейки, при 70% уже ощутимо съедает маржу.'],
+  roi:['ROI','Прибыль со штуки / себестоимость × 100%. Сколько зарабатывает каждый рубль, вложенный в товар. ROI 50% значит: вложили 100 ₽ в закупку, вернули 150 ₽.'],
+  unit_profit:['Юнит-экономика','Сколько остаётся с одной проданной штуки после всех расходов на неё: себестоимость, комиссия, логистика, невыкупы, хранение, реклама, налог. Если тут минус, рост продаж только увеличит убыток.'],
+  frozen:['Заморожено в товаре','Остатки на складах и в пути по себестоимости. Это ваши деньги, которые сейчас лежат в виде товара. Чем быстрее он продаётся, тем меньше денег нужно бизнесу.'],
+  lost:['Потерянная выручка','Сколько продаж за неделю уходит из-за пустых складов. Когда товара нет на складе в регионе, площадка везёт его издалека или прячет карточку из выдачи для этого региона.'],
+  days_stock:['Дни запаса','Остаток / продажи в день по этому складу. Меньше 7 дней: пора отгружать поставку. Больше 90: товар залежался, а хранение платное.'],
+  cz:['Честный знак','Обязательная маркировка для многих категорий, в том числе одежды. Коды заказываются платно, наносятся на товар и вводятся в оборот. Пока код не введён в оборот, продавать товар нельзя и площадка его не примет.'],
+  freq:['Частотность и позиция','Частотность: сколько раз в месяц покупатели вводят этот запрос. Позиция: на каком месте ваша карточка в выдаче. Первые 2-3 экрана выдачи собирают большую часть просмотров.'],
+  capital:['Капитал бизнеса','Деньги на счетах + выплаты от площадок + товар по себестоимости + долги вам − ваши долги. Если прибыль есть, а капитал месяц к месяцу не растёт, деньги куда-то утекают: в лишний товар или в выводы собственника.'],
+  holds:['Удержания маркетплейсов','Всё, что площадка вычла из выплаты помимо комиссии: штрафы, платная приёмка, хранение, логистика выше базовой из-за коэффициента склада. Смотрите их в еженедельном отчёте о реализации.'],
+  pnl:['ОПиУ','Отчёт о прибылях и убытках. Сверху выручка, ниже все расходы, внизу результат модели. Показывает, заработал ли бизнес, независимо от того, сколько денег сейчас на счёте.'],
+  contrib:['Маржинальный доход','Выручка минус переменные расходы, те, что растут вместе с продажами. Из этих денег оплачиваются постоянные расходы: зарплата, аренда, прочее.'],
+  breakeven:['Точка безубыточности','Выручка в месяц, при которой маржинальный доход ровно покрывает постоянные расходы. Ниже неё бизнес работает в минус, выше начинается прибыль. Считается из постоянных расходов в Настройках.'],
+  credit:['Кредиторка','Ваши долги: поставщикам, подрядчикам, фулфилменту. Отсортированы по сроку, чтобы платёж не стал сюрпризом для кассы.'],
+  nds:['Условный лимит','Если выручка с начала года превысит порог, с 1-го числа следующего месяца появляется НДС. Порог и ставки меняются почти каждый год, поэтому значение задаётся в Настройках и сверяется с бухгалтером.'],
+  pba:['Прибыль до рекламы','Сколько остаётся с одной продажи, если не платить за рекламу. Это потолок: всё, что вы отдаёте рекламе, вычитается отсюда.'],
+  be_drr:['Предел ДРР','ДРР, при котором реклама съедает всю прибыль и продажа выходит в ноль. В рублях это максимальная цена заказа (CPO). Работать на пределе можно только при распродаже остатков.'],
+  cpo:['Цель и CPO','CPO: сколько рекламы ушло на один заказ. Цель здесь: половина прибыли до рекламы. Половину отдаёте площадке за продажу, половину оставляете себе. Если реклама приносит заказы дороже цели, снижайте ставки или отключайте запросы.'],
+  tariffs:['Тарифы площадок','Комиссия зависит от категории и площадки, логистика от коэффициента склада. Площадки меняют их часто, иногда без предупреждения. Поменяли тариф здесь: пересчитается юнитка всех товаров, реклама, решения и лента рисков.'],
+  onepct:['Взнос 1%','ИП на УСН платит дополнительный взнос 1% с дохода сверх 300 тыс. ₽ за год, помимо фиксированных взносов.']
+};
+const hint = k => GLOSS[k] ? `<button type="button" class="hint" data-h="${k}" aria-label="Что это: ${GLOSS[k][0]}">?</button>` : '';
+function fillHints(){ document.querySelectorAll('.hslot[data-h]').forEach(el => { if (!el.firstChild) el.innerHTML = hint(el.dataset.h); }); }
+const pop = document.createElement('div'); pop.className = 'pop'; document.body.appendChild(pop);
+document.addEventListener('click', e => {
+  const b = e.target.closest('.hint');
+  document.querySelectorAll('.hint.on').forEach(x => x !== b && x.classList.remove('on'));
+  if (!b) { if (!e.target.closest('.pop')) pop.classList.remove('show'); return; }
+  e.preventDefault(); e.stopPropagation();
+  if (b.classList.contains('on')) { b.classList.remove('on'); pop.classList.remove('show'); return; }
+  const g = GLOSS[b.dataset.h]; b.classList.add('on');
+  pop.innerHTML = `<b>${esc(g[0])}</b>${esc(g[1])}`; pop.classList.add('show');
+  const r = b.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight;
+  let left = Math.min(Math.max(12, r.left - w/2 + 8), innerWidth - w - 12), top = r.bottom + 8;
+  if (top + h > innerHeight - 12) top = Math.max(12, r.top - h - 8);
+  pop.style.left = left + 'px'; pop.style.top = top + 'px';
+}, true);
+addEventListener('scroll', () => { pop.classList.remove('show'); document.querySelectorAll('.hint.on').forEach(x=>x.classList.remove('on')); }, true);
+
+/* ================= ОБЩИЙ ПЕРИОД ================= */
+function renderPeriodSeg(){
+  const opts = [['week','Неделя'],['month','Месяц'],['quarter','90 дней']];
+  document.querySelectorAll('.pslot').forEach(el => {
+    el.innerHTML = `<div class="seg">${opts.map(o=>`<button data-p="${o[0]}" class="${PERIOD===o[0]?'on':''}">${o[1]}</button>`).join('')}</div>`;
+  });
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.pslot button'); if (!b) return;
+  PERIOD = b.dataset.p; try { localStorage.setItem('tatyana_demo_brandos_v3_period', PERIOD); } catch(err) {}
+  route();
+});
+// мини-графики в KPI: дни для недели, месяцы для месяца, недели для квартала
+function sparkSeries(){
+  const buckets = [];
+  if (PERIOD === 'week') for (let i = 9; i >= 0; i--) { const d = addD(TODAY,-i); buckets.push([d, d, false]); }
+  else if (PERIOD === 'quarter') for (let i = 12; i >= 0; i--) buckets.push([addD(TODAY,-7*i-6), addD(TODAY,-7*i), false]);
+  else for (let i = 7; i >= 0; i--) { const a = new Date(TODAY.getFullYear(), TODAY.getMonth()-i, 1); buckets.push([a, i ? new Date(a.getFullYear(), a.getMonth()+1, 0) : TODAY, true]); }
+  const f = buckets.map(b => finFor(b[0], b[1], b[2]));
+  return {rev:f.map(x=>x.rev), profit:f.map(x=>x.profit), margin:f.map(x=>x.margin)};
+}
+
+/* ================= КАЛЕНДАРЬ ДЕНЕГ И СОБЫТИЙ ================= */
+let calDays = 7;
+$('#calSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; calDays = +b.dataset.d; [...$('#calSeg').children].forEach(x=>x.classList.toggle('on', x===b)); renderCalendar(); });
+function calendarEvents(){
+  const ev = [];
+  DEMO.cashflow.forEach(d => d.ev.forEach(x => ev.push({date:d.date, t:x.name, sum:x.sum, type: x.sum < 0 ? 'pay' : 'in'})));
+  const paySums = DEMO.payments.map(p => p.sum);
+  DEMO.credit.forEach(c => { if (!paySums.includes(-c.sum)) ev.push({date:nextDay(c.due), t:c.who, sum:-c.sum, type:'pay'}); });
+  DEMO.supplies.forEach(s => ev.push({date:addD(TODAY, s.eta), t:`Поставка ${s.wh}, ${s.qty} шт · ${s.st}`, type:'supply'}));
+  DEMO.events.forEach(x => ev.push({date:addD(TODAY, x.in), t:x.t, type:x.type}));
+  const ytd = DEMO.ytdRevenue.reduce((a,b)=>a+b,0), left = DEMO.settings.ndsThreshold - ytd;
+  if (left > 0) ev.push({date:addD(TODAY, Math.ceil(left/(DEMO.ytdRevenue.at(-1)/TODAY.getDate()))), t:'Выручка с начала года дойдёт до порога НДС', type:'tax'});
+  return ev;
+}
+function renderCalendar(){
+  const end = addD(TODAY, calDays), ev = calendarEvents().filter(x => inR(x.date, TODAY, end))
+    .filter(x => isOwner || x.type !== 'promo');
+  const by = {}; ev.forEach(x => (by[iso(x.date)] ||= []).push(x));
+  const IC = {pay:['red','−'], in:['','+'], supply:['vio','▣'], promo:['amb','%'], task:['amb','!'], tax:['red','₽']};
+  const wd = ['вс','пн','вт','ср','чт','пт','сб'];
+  $('#cal').innerHTML = `<div class="cal">${Object.keys(by).sort().map(k => { const d = new Date(k+'T00:00'), isT = iso(TODAY) === k;
+    return `<div class="day"><div class="dt ${isT?'today':''}"><b>${d.getDate()}</b>${isT?'сегодня':wd[d.getDay()]+', '+MONTHS_GEN[d.getMonth()].slice(0,3)}</div><div>${by[k].map(x => `<div class="ev"><span class="ic ${IC[x.type][0]}">${IC[x.type][1]}</span><span>${esc(x.t)}</span>${x.sum?`<span class="sum num ${x.sum<0?'down':'up'}">${x.sum<0?'−':'+'}${kRub(Math.abs(x.sum))}</span>`:''}</div>`).join('')}</div></div>`; }).join('') || '<div class="empty">Событий нет</div>'}</div>`;
+  const T = DEMO.taxes, ytd = DEMO.ytdRevenue.reduce((a,b)=>a+b,0);
+  $('#taxLine').innerHTML = `<div class="taxline"><span><b>Налоги:</b> ${T.regime} ${kRub(T.usn)} до ${T.due} ${MONTHS_GEN[TODAY.getMonth()]}</span><span style="color:var(--muted)">до порога НДС ${kRub(Math.max(DEMO.settings.ndsThreshold-ytd,0))} ${hint('nds')}</span><a href="#finance" style="margin-left:auto">Финансы →</a></div>`;
+}
+
+/* ================= НАСТРОЙКИ ================= */
+function renderSettings(){
+  const S = DEMO.settings, F = DEMO.pnlFixed;
+  const fld = (id, label, val, help, step=1) => `<label class="setf"><span>${label}${help?`<small>${help}</small>`:''}</span><input type="number" id="${id}" value="${val}" step="${step}" min="0"></label>`;
+  $('#setBiz').innerHTML = `<label class="setf"><span>Имя в приветствии</span><input id="sOwner" value="${esc(DEMO.owner)}"></label>`
+    + fld('sPlan','План выручки на месяц, ₽', DEMO.plan.month, 'для полосы «План месяца»')
+    + fld('sDrr','Предел ДРР, %', S.maxDRR, 'выше подсвечивается красным', 0.5)
+    + fld('sSafe','Порог безопасности, ₽', S.safety, 'красная линия в прогнозе денег')
+    + fld('sTax','Условный расход, % от выручки', S.taxPct, 'для юнит-экономики и ОПиУ', 0.5)
+    + fld('sNds','Условный лимит, ₽', S.ndsThreshold, 'сверьте с бухгалтером');
+  $('#setFixed').innerHTML = fld('sFot','Зарплаты (ФОТ), ₽', F.fot) + fld('sRent','Аренда, ₽', F.rent) + fld('sOther','Прочие постоянные, ₽', F.other)
+    + `<div style="font-size:12px;color:var(--muted);margin-top:10px">Итого ${rub(F.fot+F.rent+F.other)} в месяц. Точка безубыточности: ${kRub((F.fot+F.rent+F.other)/(1-varShare()))} выручки.</div>`;
+  $('#setSku').innerHTML = `<tr><th>Товар</th><th>Канал</th><th class="r">Цена до скидки, ₽</th><th class="r">Ваша скидка, %</th><th class="r">Себестоимость штуки, ₽</th><th class="r">Реклама на продажу, ₽</th><th class="r">Прибыль/шт сейчас</th></tr>`
+    + DEMO.skus.map(k => { const u = unit(k); return `<tr data-art="${k.art}"><td>${esc(k.n)}<div style="font-size:11px;color:var(--dim)">${k.art}</div></td><td>${k.ch}</td>
+      <td class="r"><input type="number" data-f="price" value="${k.price}" min="0"></td><td class="r"><input type="number" data-f="disc" value="${k.disc}" min="0" max="95"></td>
+      <td class="r"><input type="number" data-f="cogs" value="${k.cogs}" min="0"></td><td class="r"><input type="number" data-f="ads" value="${k.ads}" min="0"></td>
+      <td class="r"><b class="${u.profit<0?'down':'up'}">${rub(u.profit)}</b></td></tr>`; }).join('');
+}
+function saveSettings(){
+  const n = id => Math.max(0, +$('#'+id).value || 0);
+  const skus = {};
+  document.querySelectorAll('#setSku tr[data-art]').forEach(tr => { const o = {}; tr.querySelectorAll('input').forEach(i => o[i.dataset.f] = Math.max(0, +i.value || 0)); skus[tr.dataset.art] = o; });
+  const data = { owner: $('#sOwner').value.trim() || DEMO.owner, plan: n('sPlan'), maxDRR: n('sDrr'), safety: n('sSafe'), taxPct: n('sTax'), ndsThreshold: n('sNds'),
+    fixed: { fot: n('sFot'), rent: n('sRent'), other: n('sOther') }, skus, tariffs: SAVED.tariffs };
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(data)); } catch(e) { toast('Браузер не дал сохранить настройки'); return; }
+  toast('Сохранено, пересчитываю…'); setTimeout(() => location.reload(), 500);
+}
+function resetSettings(){ try { localStorage.removeItem(SETTINGS_KEY); } catch(e) {} toast('Вернули демо-цифры'); setTimeout(() => location.reload(), 500); }
+
+
+/* ================= ЮНИТ-ЭКОНОМИКА ================= */
+let calc = null;
+function tariffAge(){ return Math.round((TODAY - new Date(DEMO.tariffs.updated+'T00:00'))/864e5); }
+function renderUnit(){
+  const all = DEMO.skus.map(k => ({k, u:unit(k)})), sold = all.reduce((a,x)=>a+x.k.perDay,0);
+  const avgP = all.reduce((a,x)=>a+x.u.profit*x.k.perDay,0)/sold, avgM = all.reduce((a,x)=>a+x.u.profit*x.k.perDay,0)/all.reduce((a,x)=>a+x.u.sp*x.k.perDay,0)*100;
+  const minus = all.filter(x=>x.u.profit<0), age = tariffAge();
+  $('#uKpis').innerHTML = [
+    [`Вклад с одной продажи ${hint('unit_profit')}`, rub(avgP), 'средняя, с учётом объёмов продаж'],
+    ['Маржа до постоянных расходов', pct(avgM), 'средневзвешенная по всем товарам'],
+    ['Товаров в минусе', `<span class="${minus.length?'down':'up'}">${minus.length}</span>`, minus.map(x=>x.k.n).join(', ') || 'все в плюсе'],
+    [`Тарифы обновлены ${hint('tariffs')}`, `<span class="${age>7?'down':'up'}">${age===0?'сегодня':age+' дн. назад'}</span>`, age>7 ? 'пора сверить комиссии с кабинетом' : 'свежие']
+  ].map(c=>`<div class="card kpi"><h3>${c[0]}</h3><div class="v num">${c[1]}</div><div class="d">${esc(c[2])}</div></div>`).join('');
+  // калькулятор: выбор товара
+  $('#cPick').innerHTML = `<option value="">Новый товар</option>` + DEMO.skus.map(k=>`<option value="${k.art}">${esc(k.n)} · ${k.ch}</option>`).join('');
+  if (!calc) calcLoad(DEMO.skus[0].art); else { $('#cPick').value = calc.art || ''; calcForm(); }
+  renderUETable();
+  renderTariffs();
+}
+$('#cPick').addEventListener('change', e => calcLoad(e.target.value));
+function calcLoad(art){
+  const k = DEMO.skus.find(x => x.art === art);
+  calc = k ? {art, ch:k.ch, cat:k.cat, price:k.price, disc:k.disc, spp:k.spp, cogs:k.cogs, comm:k.comm, log:k.log, ret:k.ret, stor:k.stor, buy:k.buy, drr:k.ads/(k.price*(1-k.disc/100))*100, target:20}
+           : {art:'', ch:'WB', cat:'', price:2000, disc:40, spp:20, cogs:400, comm:24, log:80, ret:50, stor:8, buy:85, drr:10, target:20};
+  $('#cPick').value = art || '';
+  calcForm();
+}
+function calcForm(){
+  const c = calc, cats = Object.keys(DEMO.tariffs.comm).filter(k => k.startsWith(c.ch+'|')).map(k => k.split('|')[1]);
+  const f = (id, label, step=1) => `<label>${label}<input type="number" data-k="${id}" value="${Number.isInteger(c[id])?c[id]:Number(c[id].toFixed(4))}" step="${step}" min="0"></label>`;
+  $('#calcIn').innerHTML = `<div class="cgrid">
+    <label>Площадка<select data-k="ch"><option ${c.ch==='WB'?'selected':''}>WB</option><option ${c.ch==='Ozon'?'selected':''}>Ozon</option></select></label>
+    <label>Категория<select data-k="cat"><option value="">своя комиссия</option>${cats.map(x=>`<option ${x===c.cat?'selected':''}>${esc(x)}</option>`).join('')}</select></label>
+    ${f('comm','Комиссия, %',0.5)}
+    ${f('price','Цена до скидки, ₽')}${f('disc','Ваша скидка, %')}${f('spp','СПП / скидка площадки, %')}
+    ${f('cogs','Себестоимость, ₽')}${f('log','Логистика, ₽')}${f('ret','Обратная логистика, ₽')}
+    ${f('buy','Выкуп, %')}${f('stor','Хранение на штуку, ₽')}${f('drr','Реклама, ДРР %',0.5)}
+    ${f('target','Желаемая маржа, %')}</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:10px">Налог ${DEMO.settings.taxPct}% берётся из Настроек. Комиссия подставляется из таблицы тарифов ниже, её можно поправить вручную.</div>`;
+  calcOut();
+}
+$('#calcIn').addEventListener('input', e => {
+  const k = e.target.dataset.k; if (!k) return;
+  if (k === 'ch') { calc.ch = e.target.value; calc.cat = ''; calcForm(); return; }
+  if (k === 'cat') { calc.cat = e.target.value; if (calc.cat) calc.comm = DEMO.tariffs.comm[calc.ch+'|'+calc.cat]; calcForm(); return; }
+  calc[k] = Math.max(0, +e.target.value || 0); if(['disc','spp','comm','drr','target'].includes(k))calc[k]=Math.min(calc[k],k==='disc'?95:100);if(k==='buy')calc[k]=Math.max(1,Math.min(100,calc[k]));calcOut();
+});
+function calcOut(){
+  const c = calc; if(c.price<=0||c.cogs<=0){$('#calcOut').innerHTML='<div class=note>Для расчёта введите положительные цену и себестоимость.</div>';return;} const sp = c.price*(1-c.disc/100), sku = {...c, buy:Math.max(c.buy,1), ads: sp*c.drr/100};
+  const u = unit(sku), fixed = c.cogs + c.log + u.retPer + c.stor, varPct = (c.comm + DEMO.settings.taxPct + c.drr)/100;
+  const sp0 = fixed/(1-varPct), spT = fixed/(1-varPct-c.target/100), maxDrr = (sp*(1-(c.comm+DEMO.settings.taxPct)/100) - fixed)/sp*100;
+  const toPrice = x => x/(1-c.disc/100);
+  $('#calcOut').innerHTML = `<div class="bign">
+      <div>Прибыль со штуки<b class="${u.profit<0?'down':'up'}">${rub(u.profit)}</b></div>
+      <div>Маржа / ROI<b>${pct(u.margin)} · ${pct(u.roi)}</b></div>
+      <div>Цена в ноль с рекламой ${hint('breakeven')}<b>${varPct<1 ? rub(toPrice(sp0)) : '—'}</b><small style="color:var(--dim)">до скидки, ваша ${varPct<1?rub(sp0):'—'}</small></div>
+      <div>Цена для маржи ${c.target}%<b>${varPct+c.target/100<1 ? rub(toPrice(spT)) : 'недостижимо'}</b><small style="color:var(--dim)">до скидки</small></div>
+    </div>
+    <div class="wf"><b>Ваша цена</b><div class="bar"><i style="width:100%"></i></div><b class="num" style="text-align:right">${rub(sp)}</b></div>
+    ${u.costs.map(x=>`<div class="wf"><span>${x[0]}</span><div class="bar"><i class="neg" style="width:${Math.min(x[1]/Math.max(sp,1)*100,100)}%"></i></div><span class="num down" style="text-align:right">−${rub(x[1])}</span></div>`).join('')}
+    <div style="font-size:12px;color:var(--muted);margin-top:10px">Покупатель увидит около ${rub(u.buyer)}. На рекламу этот товар выдерживает ДРР до <b style="color:var(--text)">${pct(Math.max(maxDrr,0))}</b>, дальше каждая продажа в минус.</div>`;
+  fillHints();
+}
+function renderTariffs(){
+  const T = DEMO.tariffs, age = tariffAge();
+  $('#tarDate').innerHTML = `<span class="${age>7?'down':''}">обновлены ${dShort(T.updated)}</span>`;
+  const rows = Object.entries(T.comm).sort().map(([key, v]) => { const [ch, cat] = key.split('|');
+    return `<div class="trow"><span class="tag">${ch}</span><span>${esc(cat)} <span style="color:var(--dim);font-size:12px">· ${DEMO.skus.filter(k=>k.ch===ch&&k.cat===cat).length} тов.</span></span><input type="number" step="0.5" min="0" data-tk="${esc(key)}" value="${v}" style="text-align:right" title="Комиссия, %"></div>`; }).join('');
+  $('#tariffs').innerHTML = `<div class="grid two" style="gap:24px">
+    <div><div style="font-size:12px;color:var(--muted);margin-bottom:6px">Комиссия по категории, %</div>${rows}</div>
+    <div><div style="font-size:12px;color:var(--muted);margin-bottom:6px">Коэффициент логистики: во сколько раз дороже базовой (влияет на логистику и возвраты всех товаров площадки)</div>
+      ${['WB','Ozon'].map(ch=>`<div class="trow"><span class="tag">${ch}</span><span>коэффициент</span><input type="number" step="0.05" min="0" data-lk="${ch}" value="${T.logK[ch]}" style="text-align:right"></div>`).join('')}
+      <label class="setf" style="margin-top:14px"><span>Дата, на которую тарифы сверены</span><input type="date" id="tUpd" value="${T.updated}"></label>
+      <div class="note" style="margin:12px 0">Условные тарифы для проверки модели. Реальные тарифы и способы их обновления согласовываются отдельно при внедрении.</div>
+      <button class="btn pri" onclick="saveTariffs()">Сохранить тарифы и пересчитать</button></div></div>`;
+}
+function saveTariffs(){
+  const comm = {}, logK = {};
+  document.querySelectorAll('[data-tk]').forEach(i => comm[i.dataset.tk] = Math.max(0, +i.value || 0));
+  document.querySelectorAll('[data-lk]').forEach(i => logK[i.dataset.lk] = Math.max(0, +i.value || 0));
+  SAVED.tariffs = { comm, logK, updated: $('#tUpd').value || iso(TODAY) };
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(SAVED)); } catch(e) { toast('Браузер не дал сохранить'); return; }
+  toast('Тарифы сохранены, пересчитываю…'); setTimeout(() => location.reload(), 500);
+}
+
+/* ================= РЕКЛАМА: СОВЕТНИК ================= */
+const AD_ST = {};
+/* adAdvice v2 is loaded before route() */
+let adFilter = 'all';
+$('#adSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; adFilter = b.dataset.f; [...$('#adSeg').children].forEach(x=>x.classList.toggle('on', x===b)); renderAds(); });
+/* v2: renderAds is provided by client-ui.js */
+function adSim(art){
+  const a = adAdvice(DEMO.skus.find(k=>k.art===art)), k = a.k, sp = a.u.sp;
+  $('#mSimT').textContent = 'Симулятор рекламы · ' + k.n;
+  $('#mSimB').innerHTML = `<div style="font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:14px">Двигайте ползунки: сколько процентов цены отдать рекламе и насколько вырастут продажи. Без рекламы считаем ${Math.round(k.perDay*0.75)} продаж в день: это допущение для обучения.</div>
+    <label class="setf"><span>Расход на рекламу, ДРР</span><b id="sD"></b></label><input type="range" id="sDrr" min="0" max="${Math.ceil(Math.max(a.beDRR*1.5, 30))}" step="0.5" value="${a.curDRR.toFixed(1)}" style="padding:0">
+    <label class="setf"><span>Рост продаж от рекламы</span><b id="sL"></b></label><input type="range" id="sLift" min="0" max="150" step="5" value="35" style="padding:0">
+    <div class="bign" style="margin-top:16px"><div>Прибыль со штуки<b id="sU"></b></div><div>Прибыль в месяц<b id="sM"></b><small id="sB" style="color:var(--dim)"></small></div></div>
+    <div id="sNote" class="strat" style="margin:0"></div>`;
+  const upd = () => { const d = +$('#sDrr').value, l = +$('#sLift').value, base = k.perDay*0.75;
+    const per = a.pba - sp*d/100, m = per*base*(1+l/100)*30, m0 = a.pba*base*30;
+    $('#sD').textContent = pct(d) + ' · ' + rub(sp*d/100) + ' с продажи'; $('#sL').textContent = '+' + l + '%';
+    $('#sU').innerHTML = `<span class="${per<0?'down':''}">${rub(per)}</span>`; $('#sM').innerHTML = `<span class="${m<m0?'down':'up'}">${rub(m)}</span>`; $('#sB').textContent = 'без рекламы ' + rub(m0);
+    $('#sNote').innerHTML = per < 0 ? 'Каждая продажа в минус: чем больше продаёте, тем больше теряете.' : m >= m0 ? `<b>В условной модели результат выше:</b> прибыль выше, чем без неё, на ${rub(m-m0)} в месяц.` : `<b>В условной модели результат ниже:</b> рост продаж не перекрывает расходы. Нужно меньше ДРР или больше продаж от рекламы.`; };
+  $('#mSimB').addEventListener('input', upd); upd();
+  $('#mSim').classList.add('show');
+}
+
+/* ================= ТОВАРЫ ================= */
+let ueCh = 'all';
+$('#ueSeg').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; ueCh = b.dataset.c; [...$('#ueSeg').children].forEach(x=>x.classList.toggle('on', x===b)); renderUETable(); });
+function renderUETable(){
+  const all = DEMO.skus.map(s => ({s, u:unit(s)}));
+  const rows = all.filter(x => ueCh==='all' || x.s.ch===ueCh);
+  $('#ueTbl').innerHTML = `<tr><th>Товар</th><th>Канал</th><th class="r">Покупатель платит ${hint('spp')}</th><th class="r">Ваша цена</th><th class="r">Себест.</th><th class="r">Комиссия</th><th class="r">Логистика</th><th class="r">Невыкупы ${hint('nonbuy')}</th><th class="r">Хранение</th><th class="r">Реклама</th><th class="r">Налог</th><th class="r">Выкуп ${hint('buyout')}</th><th class="r">Прибыль/шт</th><th class="r">Маржа</th><th class="r">ROI ${hint('roi')}</th></tr>` +
+    rows.map(({s,u}) => `<tr class="click" onclick="skuModal('${s.art}')"><td>${esc(s.n)}<div style="font-size:11px;color:var(--dim)">${s.art}</div></td><td>${s.ch}</td><td class="r">${rub(u.buyer)}</td><td class="r">${rub(u.sp)}</td><td class="r">${rub(s.cogs)}</td><td class="r">${rub(u.comm)}</td><td class="r">${rub(s.log)}</td><td class="r ${u.retPer>80?'down':''}">${rub(u.retPer)}</td><td class="r">${rub(s.stor)}</td><td class="r">${rub(s.ads)}</td><td class="r">${rub(u.tax)}</td><td class="r ${s.buy<80?'down':''}">${s.buy}%</td><td class="r"><b class="${u.profit<0?'down':'up'}">${rub(u.profit)}</b></td><td class="r ${u.margin<10?'down':''}">${pct(u.margin)}</td><td class="r">${pct(u.roi)}</td></tr>`).join('');
+  fillHints();
+}
+const daysCls = d => d===0||d<7 ? 'c-red' : d<14 ? 'c-amb' : d>90 ? 'c-vio' : 'c-grn';
+function stockStats(){
+  let frozen = 0, lost = 0, oos = 0;
+  DEMO.skus.forEach(s => { const sp = unit(s).sp;
+    frozen += (s.wh.reduce((a,b)=>a+b,0) + s.transit) * s.cogs;
+    s.wh.forEach((q,i) => { if (q===0) { oos++; lost += s.perDay*DEMO.whShare[i]*sp*7; } }); });
+  return {frozen, lost, oos};
+}
+function renderProducts(){
+  const all = DEMO.skus.map(s => ({s, u:unit(s)}));
+  const sold = all.reduce((a,x)=>a+x.s.perDay,0), avgP = all.reduce((a,x)=>a+x.u.profit*x.s.perDay,0)/sold;
+  const minus = all.filter(x=>x.u.profit<0), st = stockStats();
+  $('#pKpis').innerHTML = [
+    ['Всего на складах', fmt(DEMO.stock.total)+' шт', `хватит в среднем на ${DEMO.stock.days} дн.`],
+    ['Скоро закончатся', `<span class="${DEMO.stock.oos?'down':'up'}">${DEMO.stock.oos}</span>`, all.filter(x=>x.s.wh.reduce((a,b)=>a+b,0)/x.s.perDay<10).map(x=>x.s.n).join(', ') || 'запаса хватает'],
+    [`Заморожено в товаре ${hint('frozen')}`, kRub(st.frozen), 'по себестоимости, вкл. в пути'],
+    [`Сценарная оценка при нулевых остатках ${hint('lost')}`, `<span class="down">${kRub(st.lost)}</span>`, `выручки в неделю · ${st.oos} склад(а) пустые`]
+  ].map(c=>`<div class="card kpi"><h3>${c[0]}</h3><div class="v num">${c[1]}</div><div class="d">${esc(c[2])}</div></div>`).join('');
+  // склады
+  let wh = '';
+  ['WB','Ozon'].forEach(ch => {
+    const names = DEMO.warehouses[ch];
+    wh += `<tr><th>${ch==='WB'?'Wildberries':'Ozon'}</th>${names.map(n=>`<th class="r">${n}</th>`).join('')}<th class="r">В пути</th><th class="r">Хватит всего</th><th class="r">Заморожено</th></tr>`;
+    DEMO.skus.filter(s=>s.ch===ch).forEach(s => { const tot = s.wh.reduce((a,b)=>a+b,0), dAll = tot/s.perDay;
+      wh += `<tr><td>${esc(s.n)}</td>${s.wh.map((q,i)=>{ const d = q/(s.perDay*DEMO.whShare[i]); return `<td class="r"><span class="cell ${daysCls(d)}">${q} · ${q?Math.round(d)+' дн':'нет'}</span></td>`; }).join('')}
+        <td class="r">${s.transit?s.transit+' шт':'<span class="c-nil">—</span>'}</td><td class="r"><span class="cell ${daysCls(dAll)}">${Math.round(dAll)} дн</span></td><td class="r">${kRub((tot+s.transit)*s.cogs)}</td></tr>`; });
+  });
+  $('#whTbl').innerHTML = wh;
+  $('#oosNote').innerHTML = `<span class="down">${st.oos} пустых склада</span> · логистика с дальнего склада дороже`;
+  // цены
+  $('#priceTbl').innerHTML = `<tr><th>Товар</th><th class="r">До скидки</th><th class="r">Скидка</th><th class="r">Ваша цена</th><th class="r">СПП</th><th class="r">Покупатель</th></tr>` +
+    all.map(({s,u}) => `<tr><td>${esc(s.n)}</td><td class="r">${rub(s.price)}</td><td class="r">${s.disc}%</td><td class="r">${rub(u.sp)}</td><td class="r">${s.spp}%</td><td class="r"><b>${rub(u.buyer)}</b></td></tr>`).join('');
+  // честный знак
+  const C = DEMO.cz;
+  if (!C) $('#cz').innerHTML = '<div style="color:var(--muted);font-size:13px;line-height:1.6">Данные маркировки отсутствуют. Требования конкретной категории в демо не определяются.</div>'; else
+  $('#cz').innerHTML = `<div class="mini"><div class="row">Баланс счёта<b>${rub(C.balance)}</b></div>
+    ${[['Заказано кодов',C.ordered],['Нанесено',C.applied],['Введено в оборот',C.inCirculation]].map(r=>`<div class="row">${r[0]}<b>${fmt(r[1])}</b></div><div class="bar" style="height:6px;margin-bottom:6px"><i style="width:${r[1]/C.ordered*100}%"></i></div>`).join('')}</div>
+    <div class="list" style="margin-top:8px">${C.issues.map(x=>`<div class="it"><span class="ic amb">!</span><div>${esc(x.t)}<small>${esc(x.s)}</small></div></div>`).join('')}</div>`;
+  // SEO
+  $('#seoTbl').innerHTML = `<tr><th>Запрос</th><th class="r">Частотность</th><th class="r">Позиция</th><th class="r">За неделю</th></tr>` +
+    DEMO.seo.map(q => { const ch = q.was - q.pos; return `<tr><td>${esc(q.q)}<div style="font-size:11px;color:var(--dim)">${esc(q.sku)}</div></td><td class="r">${fmt(q.freq)}</td><td class="r"><b>${q.pos}</b></td><td class="r ${ch>0?'up':ch<0?'down':''}">${ch>0?'▲ '+ch:ch<0?'▼ '+(-ch):'0'}</td></tr>`; }).join('');
+  // отзывы
+  $('#revTbl').innerHTML = `<tr><th>Товар</th><th class="r">Рейтинг</th><th class="r">Негатив 7 дн</th><th class="r">Без ответа</th></tr>` +
+    DEMO.skus.map(s => `<tr><td>${esc(s.n)}</td><td class="r ${s.rating<4.6?'down':''}">★ ${s.rating.toFixed(1).replace('.',',')}</td><td class="r ${s.neg7>=3?'down':''}">${s.neg7}</td><td class="r ${s.unans?'down':''}">${s.unans}</td></tr>`).join('');
+  // конкуренты
+  $('#compTbl').innerHTML = `<tr><th>Товар / продавец</th><th class="r">Цена для покупателя</th><th class="r">Разница с вами</th><th class="r">Продаж в день</th></tr>` +
+    DEMO.competitors.map(g => { const my = DEMO.skus.find(s=>s.n===g.sku); g.mine = my ? Math.round(unit(my).buyer) : 0; return g; }).map(g => `<tr><td><b>${esc(g.sku)}</b> · вы</td><td class="r"><b>${rub(g.mine)}</b></td><td class="r">—</td><td class="r">${DEMO.skus.find(s=>s.n===g.sku)?.perDay ?? '—'}</td></tr>` +
+      g.rows.map(r => { const d = (r.p-g.mine)/g.mine*100; return `<tr><td style="padding-left:24px;color:var(--muted)">${esc(r.n)}</td><td class="r">${rub(r.p)}</td><td class="r ${d<0?'down':'up'}">${d>0?'+':''}${pct(d)}</td><td class="r">${r.s}</td></tr>`; }).join('')).join('');
+}
+function skuModal(art){
+  const s = DEMO.skus.find(x=>x.art===art), u = unit(s);
+  $('#mSkuT').textContent = s.n + ' · ' + s.ch;
+  const mx = u.sp;
+  $('#mSkuB').innerHTML = `<div style="color:var(--muted);font-size:13px;margin-bottom:12px">Куда уходят деньги с одной проданной штуки. Покупатель платит ${rub(u.buyer)}, разницу до вашей цены (СПП) доплачивает площадка.</div>
+    <div class="wf"><b>Ваша цена</b><div class="bar"><i style="width:100%"></i></div><b class="num" style="text-align:right">${rub(u.sp)}</b></div>
+    ${u.costs.map(c=>`<div class="wf"><span>${c[0]}</span><div class="bar"><i class="neg" style="width:${c[1]/mx*100}%"></i></div><span class="num down" style="text-align:right">−${rub(c[1])}</span></div>`).join('')}
+    <div class="wf" style="border-top:1px solid var(--line);padding-top:8px"><b>Прибыль</b><div class="bar"><i class="${u.profit<0?'neg':''}" style="width:${Math.abs(u.profit)/mx*100}%"></i></div><b class="num ${u.profit<0?'down':'up'}" style="text-align:right">${rub(u.profit)}</b></div>
+    <div class="note" style="margin:14px 0 0">${u.profit<0 ? `Товар продаётся в минус. Больше всего съедают невыкупы (выкуп ${s.buy}%) и логистика. Варианты: поднять цену, сократить рекламу или вывести товар.` : u.margin<12 ? `Маржа тонкая. Любой рост СПП, логистики или штрафов уведёт товар в ноль.` : `Товар зарабатывает. При ${s.perDay.toFixed(2).replace('.',',')} продажах в день это около ${kRub(u.profit*s.perDay*30)} прибыли в месяц.`}</div>`;
+  $('#mSku').classList.add('show');
+}
+
+/* ================= ФИНАНСЫ ================= */
+function capitalCalc(){
+  const st = stockStats(), recMP = DEMO.receivables.filter(r=>!r.who.startsWith('Опт')).reduce((a,r)=>a+r.sum,0), recOpt = (DEMO.receivables.find(r=>r.who.startsWith('Опт')) || {sum:0}).sum;
+  const parts = [['Деньги на счетах', DEMO.kpi.balance.v, '#b8f229'], ['У маркетплейсов к выплате', recMP, '#e6e8e3'], ['Товар по себестоимости', st.frozen, '#6b7077'], ['Нам должны оптовики', recOpt, '#3a3f46']];
+  const debt = DEMO.credit.reduce((a,c)=>a+c.sum,0);
+  return {parts, debt, total: parts.reduce((a,p)=>a+p[1],0) - debt};
+}
+function renderFinance(){
+  const P = DEMO.pnl, cur = P[P.length-1], cap = capitalCalc(), PR = periodRange(), pf = finFor(PR.from, PR.to, PR.month);
+  const holds = DEMO.holdsWeek.reduce((a,h)=>a+h.v,0), holdsPrev = DEMO.holdsWeek.reduce((a,h)=>a+h.prev,0);
+  $('#fKpis').innerHTML = [
+    [`Результат после расходов ${hint('profit')}`, rub(pf.profit), `${periodRange().label} · маржа ${pct(pf.margin)}`],
+    [`Капитал бизнеса ${hint('capital')}`, rub(cap.total), 'деньги + товар + долги нам − наши долги'],
+    [`Удержания МП за неделю ${hint('holds')}`, `<span class="down">${rub(holds)}</span>`, `было ${rub(holdsPrev)} неделей раньше`],
+    ['Мы должны', rub(cap.debt), DEMO.credit.length + ' получателя']
+  ].map(c=>`<div class="card kpi"><h3>${c[0]}</h3><div class="v num">${c[1]}</div><div class="d">${c[2]}</div></div>`).join('');
+  // ОПиУ
+  const L = [['Выручка','rev',1],['Себестоимость','cogs',-1],['Комиссии площадок','comm',-1],['Логистика','log',-1],['Хранение','stor',-1],['Реклама','ads',-1],['Удержания и штрафы','holds',-1],['Условный расход','tax',-1],['Маржинальный доход '+hint('contrib'),'contrib',0],['ФОТ','fot',-1],['Аренда','rent',-1],['Прочие расходы','other',-1],['Результат после расходов','profit',0]];
+  $('#pnl').className = 'tbl num pnl';
+  $('#pnl').innerHTML = `<tr><th>Статья</th>${DEMO.pnlMonths.map(m=>`<th class="r">${m}</th>`).join('')}</tr>` +
+    L.map(([n,k,sg]) => `<tr class="${sg===0||k==='rev'?'sum':''}"><td>${n}</td>${P.map(r => { const v = r[k]*(sg||1); return `<td class="r ${sg===0&&v<0?'down':sg===0?'up':''}">${sg===-1||v<0?'−':''}${fmt(Math.abs(v))}</td>`; }).join('')}</tr>`).join('') +
+    `<tr><td>Маржа</td>${P.map(r=>`<td class="r ${r.margin<0?'down':''}">${pct(r.margin)}</td>`).join('')}</tr>`;
+  const v = DEMO.pnlVarPct, cp = 100 - Object.values(v).reduce((a,b)=>a+b,0), fixed = Object.values(DEMO.pnlFixed).reduce((a,b)=>a+b,0);
+  const be = fixed/(cp/100), loss = P.filter(r=>r.profit<0).reduce((a,r)=>a+r.profit,0);
+  $('#beNote').innerHTML = `Точка безубыточности ${hint('breakeven')}: <b class="num">${kRub(be)}</b> выручки в месяц (постоянные расходы ${kRub(fixed)} при маржинальном доходе ${cp.toFixed(1).replace('.',',')}%). ${loss<0?"Убыток за учебные месяцы "+kRub(-loss)+".":"Убыточных месяцев в примере нет."} Это условная история, а не наблюдение за рынком или результат клиента.`;
+  // удержания
+  const hm = Math.max(1,...DEMO.holdsWeek.map(h=>Math.abs(h.v)));
+  $('#hdTot').innerHTML = `<b class="down">${rub(holds)}</b> · ${pct(holds/(cur.rev/4.3)*100)} недельной выручки`;
+  $('#holds').innerHTML = DEMO.holdsWeek.map(h => { const ch = h.prev ? (Math.abs(h.v)-Math.abs(h.prev))/Math.abs(h.prev)*100 : null;
+    return `<div class="ch" style="grid-template-columns:1fr 90px;margin:10px 0 2px"><span>${esc(h.n)}</span><b class="num ${h.v<0?'up':''}" style="text-align:right">${h.v<0?'+':''}${rub(Math.abs(h.v))}</b></div>
+      <div style="display:flex;gap:10px;align-items:center"><div class="bar" style="flex:1;height:7px"><i class="${h.v>0?'':''}" style="width:${Math.abs(h.v)/hm*100}%;${h.v>0?'background:linear-gradient(90deg,#ff6b6b,#ff8a5c);box-shadow:none':''}"></i></div>
+      <span style="font-size:11px;width:110px;text-align:right" class="${ch===null?'down':h.v<0?'up':ch>20?'down':'c-nil'}">${ch===null?(h.v===0?'без удержаний':'новое'):(ch>0?'+':'')+Math.round(ch)+'% к прошлой'}</span></div>`; }).join('') +
+    `<div style="font-size:12px;color:var(--muted);margin-top:12px">Источник: вымышленные данные демонстрации.</div>`;
+  // капитал
+  const pos = cap.parts.reduce((a,p)=>a+p[1],0);
+  $('#capital').innerHTML = `<div style="font-size:26px;font-weight:700" class="num">${rub(cap.total)}</div>
+    <div class="stack">${cap.parts.map(p=>`<i style="width:${p[1]/pos*100}%;background:${p[2]}" title="${p[0]}"></i>`).join('')}</div>
+    <div class="mini">${cap.parts.map(p=>`<div class="row"><span><i style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${p[2]};margin-right:7px"></i>${p[0]}</span><b>${kRub(p[1])}</b></div>`).join('')}
+    <div class="row">Минус наши долги<b class="down">−${kRub(cap.debt)}</b></div>
+    <div class="row">Товар в пути от поставщика<b>${fmt(DEMO.inboundFactory.qty)} шт, приход ${DEMO.inboundFactory.date}</b></div></div>
+    <div style="font-size:12px;color:var(--muted);margin-top:10px">Сравнивайте эту цифру месяц к месяцу: если прибыль есть, а капитал не растёт, деньги утекают в товар или в выводы.</div>`;
+  // кредиторка
+  $('#crTot').innerHTML = `<b>${kRub(cap.debt)}</b>`;
+  $('#credTbl').innerHTML = `<tr><th>Кому</th><th class="r">Сумма</th><th class="r">Срок</th></tr>` +
+    [...DEMO.credit].sort((a,b)=>nextDay(a.due)-nextDay(b.due)).map(c => { const d = nextDay(c.due), left = Math.round((d-TODAY)/864e5);
+      return `<tr><td>${esc(c.who)}<div style="font-size:11px;color:var(--dim)">${esc(c.note)}</div></td><td class="r">${rub(c.sum)}</td><td class="r ${left<=7?'down':''}">${dShort(d)}<div style="font-size:11px;color:var(--dim)">через ${left} дн</div></td></tr>`; }).join('');
+  $('#taxCtl').innerHTML='<p>Условная ставка расходов модели: '+DEMO.settings.taxPct+'% выручки. Это параметр демонстрации, не расчёт реальных налоговых обязательств.</p>';
+}
+function nextDay(day){ let d = new Date(TODAY.getFullYear(), TODAY.getMonth(), day); if (d < TODAY) d = new Date(TODAY.getFullYear(), TODAY.getMonth()+1, day); return d; }
+
+/* старт */
+/* ================= КОНТАКТЫ ДЛЯ ЗАЯВОК =================
+   Заполните, что есть. Пустые мессенджеры не показываются.
+   telegram: имя пользователя без @; max: полная ссылка на профиль в MAX;
+   whatsapp: номер с 7 в начале (тогда подставится готовый текст) или ссылка wa.me/qr/... из QR-кода */
+function openLead(){ $('#leadBtns').innerHTML='<p>В этом демо нет отправки заявок. Возможные подключения описаны во вкладке «Интеграции».</p>';$('#mLead').classList.add('show'); }
+function showCookie(){}
+$('#brandName').textContent = DEMO.brand;
+buildInsights();
+$('#storeBtn').innerHTML = `<span style="color:var(--muted);font-size:11px;display:block">Демо-магазин</span>${esc(STORES[STORE].name)} <span style="color:var(--muted)">▾</span>`;
+let welcomed = false; try { welcomed = !!localStorage.getItem('tatyana_demo_brandos_v3_welcomed'); } catch(e) {}
+// Predictable initial state; store selection is available manually.
+// что показывать в зависимости от роли
+document.querySelectorAll('[data-owner]').forEach(el => el.style.display = isOwner ? '' : 'none');
+document.querySelectorAll('[data-acc]').forEach(el => el.style.display = isOwner ? 'none' : '');
+if (!isOwner) $('#q').placeholder = 'Поиск: документы, товары';
+function resetBrandDemo(){
+  const keys=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('tatyana_demo_brandos_v3_'))keys.push(k);}
+  keys.forEach(k=>localStorage.removeItem(k));location.hash='home';location.reload();
+}
+function exportBrandCSV(){
+  const r=periodRange(),rows=[['Демонстрационные данные','Начало',iso(r.from),'Конец',iso(r.to)],['Код','Товар','Канал','Продано','Выручка','Себестоимость','Реклама','Вклад до постоянных расходов','Остаток']];
+  let total=0,contrib=0;DEMO.skus.forEach(s=>{const p=skuPeriod(s,r.from,r.to),u=unit(s),v=p.q*u.profit;total+=p.rev;contrib+=v;rows.push([s.art,s.n,s.ch,p.q,p.rev,p.q*s.cogs,p.q*s.ads,v,s.wh.reduce((a,b)=>a+b,0)]);});
+  const f=finFor(r.from,r.to,r.month);rows.push(['ИТОГО','','','',total,'','',contrib],['Результат после постоянных расходов','','','',f.profit]);
+  const q=x=>'"'+(typeof x==='string'?x.replace(/^[=+@-]/,"'"+'$&'):String(x??'')).replaceAll('"','""')+'"',blob=new Blob(['\uFEFF'+rows.map(x=>x.map(q).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='brandos-demo-v3.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+// Accurate channels for the selected period; their margin is before fixed expenses.
+renderChannels=function(){const r=periodRange();DEMO.channels=['WB','Ozon'].map(ch=>{const rows=DEMO.ledger.filter(x=>x.ch===ch&&inR(x.date,r.from,r.to)),rev=rows.reduce((a,x)=>a+x.rev,0),profit=rows.reduce((a,x)=>a+x.contrib,0);return {name:ch,rev,margin:rev?profit/rev*100:0};});const max=Math.max(1,...DEMO.channels.map(x=>x.margin));$('#channels').innerHTML=DEMO.channels.map(c=>'<div class="ch"><b>'+c.name+'</b><div class="bar"><i style="width:'+Math.max(0,c.margin)/max*100+'%"></i></div><span>'+pct(c.margin)+'</span></div><p>'+rub(c.rev)+' · вклад до постоянных расходов</p>').join('');};
+// No unrealistic "required daily pace" after a finished month.
+const originalRenderHome=renderHome;
+renderHome=function(){
+ DEMO.funnel=[{s:'Лиды',n:deals.length},{s:'Переговоры',n:deals.filter(x=>x.st>=1).length},{s:'КП',n:deals.filter(x=>x.st>=2).length},{s:'Оплата',n:deals.filter(x=>x.st===4).length}];
+ DEMO.sales.orders=DEMO.rnp.filter(x=>iso(x.date)===iso(TODAY)).reduce((a,x)=>a+x.orders,0);
+ originalRenderHome();$('#taxLine').innerHTML='Учебная финансовая модель: ставка '+DEMO.settings.taxPct+'%. Это условные расходы, не налоговый расчёт.';
+ if(TODAY.getDate()===new Date(TODAY.getFullYear(),TODAY.getMonth()+1,0).getDate())$('#planNote').innerHTML='Учебный месяц завершён. Отклонение от плана: '+rub(sumDaily(new Date(2026,9,1),TODAY)-DEMO.plan.month);
+};
+Object.keys(GLOSS).filter(k=>/nds|onepct|tax/.test(k)).forEach(k=>GLOSS[k]=['Условный параметр модели','Вымышленный пример; реальные налоговые обязательства в этой демонстрации не рассчитываются.']);
+GLOSS.profit=['Результат после расходов','Выручка минус себестоимость, комиссии, логистика, хранение, реклама, условный процент расходов и постоянные расходы. Данные вымышлены.'];
+const originalSaveSettings=saveSettings;
+saveSettings=function(){const inputs=[...document.querySelectorAll('#p-settings input[type=number]')];if(inputs.some(x=>!Number.isFinite(+x.value)||+x.value<0)||+$('#sPlan').value<=0||+$('#sNds').value<=0||+$('#sTax').value>100||[...document.querySelectorAll('#setSku input[data-f=disc]')].some(x=>+x.value>=100)||[...document.querySelectorAll('#setSku input[data-f=price]')].some(x=>+x.value<=0)){toast('Проверьте значения: цена и план больше нуля, проценты от 0 до 95.');return;}originalSaveSettings();};
+
+// All recommendations are conditional model checks; in-transit stock is never available stock.
+function adAdvice(k){
+ const u=unit(k),sp=u.sp,pba=u.profit+k.ads,beDRR=sp?pba/sp*100:0,tgtDRR=Math.max(0,beDRR/2),curDRR=sp?k.ads/sp*100:0,tgtCPO=Math.max(0,pba/2),available=k.wh.reduce((a,b)=>a+b,0),days=k.perDay>0?available/k.perDay:null;
+ const cashSafe=DEMO.cashflow.every(x=>x.bal>=DEMO.settings.safety),checks=[['вклад до постоянных расходов положителен',u.profit>0],['доступного запаса не менее 14 дней',days!=null&&days>=14],['рейтинг не ниже условного порога 4,6',k.rating>=4.6],['выкуп не ниже условного порога 80%',k.buy>=80],['сценарий денег выше порога безопасности',cashSafe]];
+ const eligible=checks.every(c=>c[1]);let st=eligible?'test':u.profit<=0?'cut':days==null||days<14?'supply':'fix';
+ const reason=checks.filter(c=>!c[1]).map(c=>c[0]).join('; ');
+ const strat=eligible?'Условные проверки пройдены. Можно рассмотреть ограниченный тест, но этот пример не доказывает отдачу конкретной кампании.':st==='supply'?'Увеличение бюджета отложить. Сначала подтвердить приёмку поставки и достаточный доступный запас. Товар в пути не включён в доступный остаток.':st==='cut'?'Не увеличивать расход: вклад с продажи после текущих расходов неположителен. Проверить цену, себестоимость и затраты.':'Сначала устранить ограничения. При таком сценарии увеличение бюджета не предлагается.';
+ return{k,u,st,pba,beDRR,tgtDRR,curDRR,tgtCPO,checks,strat,cover:days,available,days,eligible,reason,incoming:k.transit||0};
+}
+function renderAds(){
+ const R=periodRange(),{rev,ads}=adsForPeriod(R),all=DEMO.skus.map(adAdvice),ready=all.filter(a=>a.eligible).length;
+ $('#adPeriodLabel').textContent=R.label+' · тот же период, что в финансах';
+ $('#adKpis').innerHTML=[['Расход на рекламу',rub(ads),R.label+' · по учебным продажам'],['ДРР выбранного периода',rev?pct(ads/rev*100):'—','Тот же период и данные, что в финансах'],['Условно готовы к тесту',ready,'Все проверки должны быть пройдены'],['Сначала устранить ограничения',all.length-ready,'Нельзя увеличивать бюджет без проверки']].map(c=>'<div class="card kpi"><h3>'+c[0]+'</h3><div class="v num">'+c[1]+'</div><div class="d">'+c[2]+'</div></div>').join('');
+ const labels={test:['Условно готов к тесту','lime'],supply:['Сначала поставка','amb'],cut:['Проверить затраты','red'],fix:['Сначала ограничения','amb']};
+ const list=all.filter(a=>adFilter==='all'||adFilter==='go'&&a.eligible||adFilter==='no'&&!a.eligible||adFilter==='cut'&&a.st==='cut');
+ $('#adList').innerHTML=list.map(a=>`<div class="card adc"><div class="hd"><div><b>${esc(a.k.n)}</b><small>${a.k.ch} · ${a.k.perDay.toFixed(2).replace('.',',')} продаж/день — среднее октября</small></div><span class="badge ${labels[a.st][1]}">${labels[a.st][0]}</span></div><p class="stockExplain">Доступно: <b>${a.available} шт. · ${a.days==null?'нет скорости':Math.round(a.days)+' дн.'}</b>. В пути: ${a.incoming} шт. ${a.incoming?'Учебная дата ожидаемой поставки — 5 ноября; до приёмки запас не увеличивается.':''}</p><div class="admx"><div>Вклад с продажи<b class="${a.u.profit<0?'down':'up'}">${rub(a.u.profit)}</b><small>после переменных расходов</small></div><div>Расход на единицу<b>${rub(a.k.ads)}</b><small>параметр модели октября</small></div><div>Предел ДРР в модели<b>${pct(Math.max(a.beDRR,0))}</b><small>без постоянных расходов</small></div><div>Текущая ДРР товара<b>${pct(a.curDRR)}</b><small>параметр одной продажи</small></div></div><div class="chk">${a.checks.map(([text,ok])=>`<span class="${ok?'ok':'no'}">${ok?'✓':'✕'} ${esc(text)}</span>`).join('')}</div><div class="adReason">${a.strat}</div><button class="btn sm" onclick="go('products')">Проверить остатки</button> <button class="btn sm ghost" onclick="openUnitV2('${a.k.art}')">Разобрать вклад с продажи</button> <button class="btn sm ghost" onclick="adSim('${a.k.art}')">Условный сценарий затрат</button></div>`).join('')||'<div class="card empty">Нет товаров под выбранным фильтром</div>';
+ $('#p-ads .top .sub').textContent='Учебные ограничения по затратам и запасу. Отдача отдельных кампаний не рассчитывается.';
+ const toolbar=$('#adSeg').parentElement;toolbar.querySelector('span')?.replaceChildren(document.createTextNode('Проверки основаны на параметрах октября; факт расходов — за выбранный период.'));
+}
+function adsForPeriod(R=periodRange()){const rows=DEMO.rnp.filter(x=>inR(x.date,R.from,R.to));return{rev:rows.reduce((a,x)=>a+x.rev,0),ads:rows.reduce((a,x)=>a+x.ads,0)};}
+function openUnitV2(art){calc=null;go('unit');setTimeout(()=>calcLoad(art),80);}
+renderNav=function(){const cur=(location.hash||'#home').slice(1),labels={home:'Сегодня',products:'Товары и запас',analytics:'Продажи и воронка',ads:'Реклама',finance:'Финансы',tasks:'Задачи'},primary=['home','products','analytics','ads','finance','tasks'],secondary=['crm','docs','integrations','settings'];const link=id=>{const p=PAGES.find(p=>p.id===id);return p&&can(id)?`<a href="#${id}" class="${cur===id?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${p.i}</svg>${labels[id]||p.n}</a>`:'';};$('#nav').innerHTML=primary.map(link).join('')+`<details class="secondaryNav" ${secondary.includes(cur)?'open':''}><summary>Дополнительные разделы</summary>${secondary.map(link).join('')}</details>`;};
+const homeBeforeV2=renderHome;
+renderHome=function(){homeBeforeV2();$('#greet').textContent='Продажи, прибыль и действия';$('#today').textContent='Вымышленный бренд «Линия» · данные на 31 октября 2026';const host=$('#p-home');let actions=$('#homeActionsV2');if(!actions){actions=document.createElement('div');actions.id='homeActionsV2';actions.className='homeActions';$('#kpis').after(actions);}const losers=DEMO.skus.filter(s=>unit(s).profit<0),low=DEMO.skus.filter(s=>s.perDay>0&&s.wh.reduce((a,b)=>a+b,0)/s.perDay<14),open=tasks.filter(t=>t.col!==3).length;actions.innerHTML=`<button onclick="go('unit')"><strong>Проверить прибыль: ${losers.length} товар</strong><small>${losers.map(s=>esc(s.n)).join(', ')||'Убыточных товаров нет'}</small></button><button onclick="go('products')"><strong>Проверить доступный запас: ${low.length}</strong><small>Товар в пути не равен принятой поставке</small></button><button onclick="go('decisions')"><strong>Выбрать и назначить действие</strong><small>${open} незавершённых задач · сначала причина, затем ответственный</small></button>`;
+ $('#lastDocs').closest('.card').hidden=true;host.querySelector('.qa').innerHTML='<button class="btn" onclick="openTask()">Новая задача</button><button class="btn" onclick="go(\'decisions\')">Все действия и причины</button>';
+ $('#kpis').insertAdjacentHTML('afterend','');$('#feed').closest('.card').querySelector('h3').childNodes[0].textContent='Причины для проверки ';
+ const feed=$('#feed');feed.querySelectorAll('.tag.ai').forEach(e=>e.remove());
+ $('#sources').innerHTML='<span class="src">Вымышленные отчёты · внешние источники не подключены</span>';
+};
+const financeBeforeV2=renderFinance;
+renderFinance=function(){financeBeforeV2();const R=periodRange(),f=finFor(R.from,R.to,R.month),contrib=DEMO.ledger.filter(x=>inR(x.date,R.from,R.to)).reduce((a,x)=>a+x.contrib,0),fixed=contrib-f.profit;let b=$('#financeBridgeV2');if(!b){b=document.createElement('div');b.id='financeBridgeV2';b.className='profitBridge';$('#fKpis').after(b);}b.innerHTML=`<b>Как получен результат · ${R.label}</b><br>Вклад товаров ${rub(contrib)} − постоянные расходы периода ${rub(fixed)} = <b>${rub(f.profit)}</b>.<div class="miniContext">Вклад уже учитывает себестоимость, комиссии, логистику, хранение, затраты продвижения и условный расход модели. Для 7/90 дней постоянные расходы распределяются через 30,4 дня месяца.</div>`;$('#taxCtl').closest('.card').hidden=true;$('#pnl').insertAdjacentHTML('beforebegin','');const title=$('#pnl').closest('.card').querySelector('h3');if(title)title.childNodes[0].textContent='История модели по полным месяцам · май–октябрь ';};
+const settingsBeforeV2=renderSettings;
+renderSettings=function(){settingsBeforeV2();$('#sNds').closest('label').hidden=true;$('#setSku').insertAdjacentHTML('beforebegin','');};
+const unitBeforeV2=renderUnit;
+renderUnit=function(){unitBeforeV2();let note=$('#unitContextV2');if(!note){note=document.createElement('p');note.id='unitContextV2';note.className='bridgeNote';$('#uKpis').before(note);}note.textContent='Вклад с продажи — до постоянных расходов. В финансах они вычитаются отдельно. Калькулятор меняет только сценарий одной продажи; факты выбранного периода не переписываются.';};
+let pendingDecisionV2=null;
+const decBeforeV2=decSet;
+decSet=function(id,status,reason){if(status!=='accepted'){decBeforeV2(id,status,reason);return;}const d=DEMO.decisions.find(d=>d.id===id);if(!d)return;const existing=tasks.find(t=>t.dec===id);if(existing){go('tasks');toast('По этому действию задача уже создана');return;}openTask();pendingDecisionV2=id;$('#mTaskT').textContent='Назначить действие';$('#tTitle').value=d.t;let context=$('#decisionContextV2');if(!context){context=document.createElement('div');context.id='decisionContextV2';context.className='actionSource';$('#mTaskT').after(context);}context.textContent='Основание: '+d.why+' Денежный эффект — условная оценка, не результат клиента.';context.hidden=false;};
+const saveBeforeV2=saveTask;
+saveTask=function(){if(!$('#tTitle').value.trim())return;const dec=pendingDecisionV2,oldIds=new Set(tasks.map(t=>t.id));saveBeforeV2();if(dec){const t=tasks.find(t=>!oldIds.has(t.id));if(t){t.dec=dec;t.ai=true;decState[dec]={s:'accepted',r:''};LS.set('tasks',tasks);LS.set('decisions',decState);renderNav();pendingDecisionV2=null;go('tasks');toast('Действие назначено, задача на доске');}}};
+const openBeforeV2=openTask;
+openTask=function(id){if(id==null)pendingDecisionV2=null;openBeforeV2(id);let context=$('#decisionContextV2');const t=tasks.find(t=>t.id===id),d=t?.dec?DEMO.decisions.find(d=>d.id===t.dec):null;if(d){if(!context){context=document.createElement('div');context.id='decisionContextV2';context.className='actionSource';$('#mTaskT').after(context);}context.textContent='Основание: '+d.why;context.hidden=false;}else if(context)context.hidden=true;};
+const taskBeforeV2=renderTasks;
+renderTasks=function(){taskBeforeV2();$('#taskBoard').querySelectorAll('.t').forEach(e=>{const t=tasks.find(t=>t.t===e.textContent);if(t?.dec)e.insertAdjacentHTML('afterend','<div class="miniContext">Из проверки риска · основание доступно в действиях</div>');});};
+
+
+// BrandOS v3: the historical ledger is immutable; all controls below operate a local future scenario.
+const sellerModel=BrandSellerModel.create(DEMO.skus,unit),SELLER_KEY='tatyana_demo_brandos_v3_seller';
+let sellerState=sellerModel.initial();try{const saved=JSON.parse(localStorage.getItem(SELLER_KEY));if(saved?.version===3&&Array.isArray(saved.supplies)&&Array.isArray(saved.campaigns)&&Array.isArray(saved.log))sellerState=saved;}catch(e){}
+let sellerPending=null;
+const sellerMeta={supplies:'Поставки',promos:'Акции',prices:'Цены и скидки площадок',rnp:'РНП · план и факт'};
+if(isOwner)ROLE.pages.push(...Object.keys(sellerMeta));
+function setPeriod(p){if(!['week','month','quarter'].includes(p))return;PERIOD=p;try{localStorage.setItem('tatyana_demo_brandos_v3_period',p);}catch(e){}route();}
+for(const [id,n]of Object.entries(sellerMeta)){PAGES.push({id,n,i:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 14h8"/>'});const s=document.createElement('section');s.className='page';s.id='p-'+id;$('#p-home').parentElement.append(s);}
+document.body.insertAdjacentHTML('beforeend','<dialog id="seller-confirm" class="sellerDialog"><h2 id="seller-confirm-title"></h2><p id="seller-confirm-text"></p><p class="sellerSnapshot">Изменение сохранится только в этом локальном демо. На маркетплейс ничего не отправляется. Исторические продажи и прибыль не изменятся.</p><div class="sellerError" id="seller-confirm-error" role="alert"></div><div class="sellerActions"><button class="btn ghost" onclick="sellerCancel()">Отмена</button><button class="btn primary" onclick="sellerConfirm()">Подтвердить в демо</button></div></dialog>');
+function sellerSave(){try{localStorage.setItem(SELLER_KEY,JSON.stringify(sellerState));}catch(e){toast('Браузер не сохранил сценарий: изменения действуют до перезагрузки');}}
+function sellerAsk(title,text,action){sellerPending=action;$('#seller-confirm-title').textContent=title;$('#seller-confirm-text').textContent=text;$('#seller-confirm-error').textContent='';$('#seller-confirm .primary').hidden=false;$('#seller-confirm .sellerSnapshot').hidden=false;$('#seller-confirm .ghost').textContent='Отмена';$('#seller-confirm').showModal();}
+function sellerCancel(){sellerPending=null;$('#seller-confirm').close();}
+$('#seller-confirm').addEventListener('cancel',()=>{sellerPending=null;});
+function sellerConfirm(){if(!sellerPending)return;try{sellerPending();sellerSave();sellerPending=null;$('#seller-confirm').close();route();toast('Изменение сохранено в демо');}catch(e){$('#seller-confirm-error').textContent=e.message;}}
+function sellerHead(id,description){return `<div class="top"><button class="burger" onclick="toggleSide()">☰</button><div><h1>${sellerMeta[id]}</h1><div class="sub">${description}</div></div></div>`;}
+const sellerNote='<div class="sellerNote"><b>Управление в демо</b> · будущий сценарий после снимка 31.10.2026. Изменения локальные; исторические отчёты за октябрь сохраняются. API площадок не подключены.</div>';
+function sellerOptions(){return DEMO.skus.map(s=>`<option value="${esc(s.art)}">${esc(s.n)} · ${s.ch}</option>`).join('');}
+function sellerPeriods(){return '<div class="sellerPeriod">'+[['week','Неделя'],['month','Месяц'],['quarter','90 дней']].map(([p,n])=>`<button class="btn ${PERIOD===p?'primary':'ghost'}" onclick="setPeriod('${p}')">${n}</button>`).join('')+'</div>';}
+const sellerOriginalRoute=route;
+route=function(){const id=(location.hash||'#home').slice(1);if(!sellerMeta[id]){sellerOriginalRoute();return;}document.querySelectorAll('.page').forEach(p=>p.classList.toggle('on',p.id==='p-'+id));renderNav();renderPeriodSeg();$('#side').classList.remove('show');pop.classList.remove('show');hideTip();scrollTo(0,0);({supplies:renderSellerSupplies,promos:renderSellerPromos,prices:renderSellerPrices,rnp:renderSellerRnp})[id]();};
+// Remove the previous callback reference, otherwise custom routes are redirected to home.
+removeEventListener('hashchange',sellerOriginalRoute);addEventListener('hashchange',route);
+renderNav=function(){const cur=(location.hash||'#home').slice(1),labels={home:'Сегодня',unit:'Юнитэкономика',products:'Остатки',analytics:'Продажи',finance:'Финансы',ads:'Реклама',supplies:'Поставки',promos:'Акции',rnp:'РНП',prices:'Цены и скидки'},main=['home','unit','products','analytics','finance','ads','supplies','promos','rnp','prices'],extra=['tasks','decisions','crm','docs','integrations','settings'];const link=id=>{const p=PAGES.find(p=>p.id===id);return p&&can(id)?`<a href="#${id}" class="${cur===id?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${p.i}</svg>${labels[id]||p.n}</a>`:'';};$('#nav').innerHTML=main.map(link).join('')+`<details class="secondaryNav" ${extra.includes(cur)?'open':''}><summary>Задачи и дополнительные разделы</summary>${extra.map(link).join('')}</details>`;};
+function renderSellerSupplies(){const names={draft:'Черновик',transit:'В пути',received:'Принята в сценарии'};$('#p-supplies').innerHTML=sellerHead('supplies','Планирование, отправка и приёмка учебных поставок')+sellerNote+`<div class="sellerGrid"><div class="card"><h3>Новая поставка</h3><form class="sellerForm" onsubmit="sellerNewSupply(event)"><label>Товар<select id="s3-art" onchange="sellerSupplyWarehouses()">${sellerOptions()}</select></label><label>Количество, шт.<input id="s3-qty" type="number" min="1" max="100000" step="1" value="50" required></label><label>Склад назначения<select id="s3-wh"></select></label><label>Ожидаемая дата<input id="s3-eta" type="date" min="2026-11-01" max="2026-12-31" value="2026-11-10" required></label><div id="s3-error" class="sellerError" role="alert"></div><button class="btn primary">Проверить поставку</button></form></div><div class="card"><h3>Доступно и в пути · сценарий</h3>${sellerStockTable()}<p class="sellerSnapshot">Черновик не увеличивает остаток. Только подтверждённая приёмка переносит количество из пути в доступное. План не учитывает будущие продажи, сезонность и сроки закупки.</p></div></div><div class="card" style="margin-top:16px"><h3>Поставки</h3><div class="tw"><table class="tbl"><tr><th>Товар</th><th>Склад</th><th>Количество</th><th>Дата</th><th>Статус</th><th>Действие</th></tr>${sellerState.supplies.map(x=>{const s=DEMO.skus.find(s=>s.art===x.art),wh=DEMO.warehouses[s.ch][x.warehouse];return `<tr><td>${esc(s.n)}</td><td>${esc(wh)}</td><td>${x.qty}</td><td>${esc(x.eta)}</td><td>${names[x.status]}</td><td>${x.status!=='received'?`<button class="btn sm" onclick="sellerAdvance(${x.id})">${x.status==='draft'?'Отправить в демо':'Принять в демо'}</button>`:'Готово'}</td></tr>`;}).join('')}</table></div></div>`+sellerJournal();sellerSupplyWarehouses();}
+function sellerStockTable(){return '<div class="tw"><table class="tbl"><tr><th>Товар</th><th>Доступно</th><th>В пути</th><th>Дней</th></tr>'+DEMO.skus.map(s=>{const x=sellerModel.stock(sellerState,s.art);return `<tr><td>${esc(s.n)}</td><td>${x.available}</td><td>${x.transit}</td><td>${x.days==null?'—':Math.round(x.days)}</td></tr>`;}).join('')+'</table></div>';}
+function sellerSupplyWarehouses(){const s=DEMO.skus.find(s=>s.art===$('#s3-art').value);$('#s3-wh').innerHTML=DEMO.warehouses[s.ch].map((n,i)=>`<option value="${i}">${esc(n)}</option>`).join('');}
+function sellerNewSupply(e){e.preventDefault();const art=$('#s3-art').value,qty=$('#s3-qty').value,wh=$('#s3-wh').value,eta=$('#s3-eta').value;try{const draft=sellerModel.copy(sellerState);sellerModel.supply(draft,art,qty,wh,eta);$('#s3-error').textContent='';sellerAsk('Создать черновик поставки?',`${DEMO.skus.find(s=>s.art===art).n}\n${qty} шт., ожидаемая дата ${eta}. Остаток пока не изменится.`,()=>sellerModel.supply(sellerState,art,qty,wh,eta));}catch(err){$('#s3-error').textContent=err.message;}}
+function sellerAdvance(id){const x=sellerState.supplies.find(x=>x.id===id);sellerAsk(x.status==='draft'?'Отправить поставку в демо?':'Подтвердить приёмку в демо?',x.status==='draft'?`${x.qty} шт. станут товаром в пути. Доступный запас не увеличится.`:`${x.qty} шт. перейдут из пути в доступный запас будущего сценария. Снимок склада за октябрь не изменится.`,()=>sellerModel.advance(sellerState,id));}
+function sellerJournal(){return `<details class="card" style="margin-top:16px"><summary>Журнал изменений демо · ${sellerState.log.length}</summary>${sellerState.log.map(x=>`<div class="sellerLog">${x.n}. ${esc(x.text)}</div>`).join('')||'<p>Изменений пока нет.</p>'}</details>`;}
+const sellerProductsBefore=renderProducts;renderProducts=function(){sellerProductsBefore();$('#p-products .top h1').textContent='Остатки';$('#p-products .top .sub').textContent='Исторический снимок 31.10.2026; поставки показаны отдельно как будущий сценарий.';let c=$('#seller-stock-scenario');if(!c){c=document.createElement('div');c.id='seller-stock-scenario';$('#p-products .top').after(c);}c.innerHTML=`<details class="card"><summary>Будущий сценарий после поставок · посмотреть</summary>${sellerStockTable()}<a class="sourceBtn" href="#supplies">Открыть поставки</a></details>`;};
+function sellerCheck(s){const st=sellerModel.stock(sellerState,s.art),p=sellerState.promos[s.art]?.enabled?sellerState.promos[s.art].price:sellerModel.currentPrice(sellerState,s.art);return adAdvice({...s,wh:[st.available],transit:st.transit,price:p,disc:0});}
+const sellerAdsBefore=renderAds;renderAds=function(){sellerAdsBefore();$('#adList').insertAdjacentHTML('afterbegin','<div class="sellerNote">Проверки по исходным параметрам октября · исторический снимок. Будущим сценарием управляйте в кампаниях выше.</div>');let c=$('#seller-campaigns');if(!c){c=document.createElement('div');c.id='seller-campaigns';$('#adKpis').after(c);}c.innerHTML=sellerNote+'<h2 style="margin:20px 0 10px">Кампании · локальный сценарий</h2><p class="sellerSnapshot">Пауза, дневной лимит и условная ставка. Изменение параметров не пересчитывает фактические расходы октября. Учитываются будущий запас и сценарная цена.</p><div class="sellerGrid">'+sellerState.campaigns.map((c,i)=>{const s=DEMO.skus.find(s=>s.art===c.art),a=sellerCheck(s);return `<div class="card"><h3>${esc(s.n)}</h3><div class="sellerStatus">${c.active?'Включена в демо':'На паузе'}</div><p>${a.eligible?'Условные проверки пройдены':esc(a.strat)}</p><form class="sellerForm" onsubmit="sellerCampaign(event,${i})"><label>Дневной лимит, ₽<input id="c3-budget-${i}" type="number" min="0" max="100000" step="1" required value="${c.budget}"></label><label>Условная ставка, ₽<input id="c3-bid-${i}" type="number" min="0.01" max="10000" step="0.01" required value="${c.bid}"></label><label>Статус<select id="c3-active-${i}"><option value="off" ${!c.active?'selected':''}>Пауза</option><option value="on" ${c.active?'selected':''}>Включена в демо</option></select></label><div class="sellerError" id="c3-error-${i}" role="alert"></div><button class="btn">Проверить изменение</button></form></div>`;}).join('')+'</div>'+sellerJournal();};
+function sellerCampaign(e,i){e.preventDefault();const c=sellerState.campaigns[i],budget=+$('#c3-budget-'+i).value,bid=+$('#c3-bid-'+i).value,active=$('#c3-active-'+i).value==='on',eligible=sellerCheck(DEMO.skus.find(s=>s.art===c.art)).eligible;try{sellerModel.changeCampaign(sellerModel.copy(sellerState),c.art,budget,bid,active,eligible);$('#c3-error-'+i).textContent='';sellerAsk('Изменить кампанию в демо?',`Статус: ${active?'включена':'пауза'}\nЛимит: ${c.budget} → ${budget} ₽/день\nУсловная ставка: ${c.bid} → ${bid} ₽`,()=>sellerModel.changeCampaign(sellerState,c.art,budget,bid,active,sellerCheck(DEMO.skus.find(s=>s.art===c.art)).eligible));}catch(err){$('#c3-error-'+i).textContent=err.message;}}
+function renderSellerPromos(){ $('#p-promos').innerHTML=sellerHead('promos','Расчёт участия в учебной акции и контроль вклада с продажи')+sellerNote+'<p class="sellerSnapshot">Учебная акция «Ноябрьский пример», 01–15.11.2026. Цены и условия вымышлены. Скидка продавца уменьшает вклад; скидка площадки анализируется отдельно.</p><div class="sellerGrid">'+DEMO.skus.map((s,i)=>{const p=sellerModel.currentPrice(sellerState,s.art),saved=sellerState.promos[s.art],price=saved?.price??Math.round(p*.9);return `<div class="card"><h3>${esc(s.n)}</h3><div class="sellerStatus">${saved?.enabled?'Участвует в демо':'Не участвует'}</div><div>Сценарная цена продавца: ${rub(p)}</div><form class="sellerForm" onsubmit="sellerPromo(event,${i},true)"><label>Цена продавца в акции, ₽<input id="p3-price-${i}" type="number" min="0.01" step="0.01" required value="${price}" oninput="sellerPromoPreview(${i})"></label><div id="p3-preview-${i}"></div><div class="sellerError" id="p3-error-${i}" role="alert"></div><div class="sellerActions"><button class="btn">Проверить участие</button>${saved?.enabled?`<button type="button" class="btn ghost" onclick="sellerPromo(null,${i},false)">Отменить участие</button>`:''}</div></form></div>`;}).join('')+'</div>'+sellerJournal();DEMO.skus.forEach((s,i)=>sellerPromoPreview(i));}
+function sellerPromoPreview(i){const s=DEMO.skus[i];try{const u=sellerModel.economics(s.art,+$('#p3-price-'+i).value);$('#p3-preview-'+i).innerHTML=`<div class="sellerMetric ${u.profit<0?'down':''}">Вклад ${rub(u.profit)} / шт.</div><div>Маржа до постоянных расходов ${pct(u.margin)}. Минимум по модели ${u.floor==null?'не определён':rub(u.floor)}.</div>`;}catch(e){$('#p3-preview-'+i).textContent=e.message;}}
+function sellerPromo(e,i,enabled){e?.preventDefault();const s=DEMO.skus[i],price=+$('#p3-price-'+i).value;try{sellerModel.promo(sellerModel.copy(sellerState),s.art,price,enabled);$('#p3-error-'+i).textContent='';sellerAsk(enabled?'Подтвердить участие в демо?':'Отменить участие в демо?',`${s.n}\n${enabled?'Акционная цена '+rub(price)+', вклад '+rub(sellerModel.economics(s.art,price).profit)+'/шт.':'Вернётся сценарная цена продавца '+rub(sellerModel.currentPrice(sellerState,s.art))+'.'}\nРезультат за октябрь не изменится.`,()=>sellerModel.promo(sellerState,s.art,price,enabled));}catch(err){$('#p3-error-'+i).textContent=err.message;}}
+function renderSellerPrices(){ $('#p-prices').innerHTML=sellerHead('prices','Цена продавца, цена покупателя и история скидок')+`<div class="sellerNote"><b>Как читать карту</b><br>По строкам — товары, по столбцам — даты. Число — разница между условной ценой продавца и покупателя в процентах цены продавца. Цвет дублирует число: ярче — больше скидка. Это синтетические наблюдения 25–31.10.2026, а не начисления площадки и не прогноз скидок.<br>Минимальная цена по модели помогает проверить, останется ли положительный вклад после переменных расходов. Постоянные расходы проверяются в финансах.</div><div class="card"><h3>Карта скидок площадок · учебная история</h3><div class="tw"><table class="tbl sellerHeat"><tr><th>Товар</th>${sellerModel.history(DEMO.skus[0].art).map(x=>`<th>${x.date.slice(8)}.10</th>`).join('')}</tr>${DEMO.skus.map(s=>'<tr><th>'+esc(s.n)+'<br>'+s.ch+'</th>'+sellerModel.history(s.art).map((x,i)=>`<td style="--heat:${.1+x.discount/100}" title="Цена продавца ${rub(x.seller)}, покупателя ${rub(x.buyer)}"><button class="btn ghost sm" onclick="sellerPriceDetail('${s.art}',${i})">${pct(x.discount)}</button></td>`).join('')+'</tr>').join('')}</table></div><p class="sellerSnapshot">Нажмите процент — увидите обе цены и расчёт. Разницу цен не прибавляем к прибыли как дополнительную выручку.</p></div>`+sellerNote+'<div class="sellerGrid">'+DEMO.skus.map((s,i)=>{const p=sellerModel.currentPrice(sellerState,s.art),u=sellerModel.economics(s.art,p);return `<div class="card"><h3>${esc(s.n)}</h3><p>Цена продавца в сценарии: <b>${rub(p)}</b><br>Цена покупателя при условной скидке ${pct(s.spp)}: <b>${rub(p*(1-s.spp/100))}</b><br>Вклад до постоянных расходов: <b>${rub(u.profit)}</b><br>Безубыточная цена модели: <b>${u.floor==null?'—':rub(u.floor)}</b></p><p class="sellerSnapshot">Комиссии и условный процент расходов зависят от цены; остальные расходы на единицу сохранены. Минимум не включает постоянные расходы. При активной акции сначала отмените участие.</p><form class="sellerForm" onsubmit="sellerPrice(event,${i})"><label>Новая цена продавца, ₽<input id="pr3-price-${i}" type="number" min="0.01" step="0.01" value="${p}" required></label><div id="pr3-error-${i}" class="sellerError" role="alert"></div><button class="btn">Проверить цену</button></form></div>`;}).join('')+'</div>'+sellerJournal();}
+function sellerPriceDetail(art,i){const s=DEMO.skus.find(s=>s.art===art),x=sellerModel.history(art)[i];$('#seller-confirm-title').textContent='Учебное наблюдение · '+x.date;$('#seller-confirm-text').textContent=`${s.n}\nЦена продавца ${rub(x.seller)}\nЦена покупателя ${rub(x.buyer)}\nРазница ${rub(x.seller-x.buyer)} / ${rub(x.seller)} × 100 = ${pct(x.discount)}\nЭто разница наблюдаемых цен, не подтверждённый размер компенсации площадки.`;sellerPending=null;$('#seller-confirm-error').textContent='';$('#seller-confirm .primary').hidden=true;$('#seller-confirm .sellerSnapshot').hidden=true;$('#seller-confirm .ghost').textContent='Закрыть';$('#seller-confirm').showModal();}
+function sellerPrice(e,i){e.preventDefault();const s=DEMO.skus[i],price=+$('#pr3-price-'+i).value;try{sellerModel.setPrice(sellerModel.copy(sellerState),s.art,price);$('#pr3-error-'+i).textContent='';sellerAsk('Изменить цену в демо?',`${s.n}\n${rub(sellerModel.currentPrice(sellerState,s.art))} → ${rub(price)}\nВклад ${rub(sellerModel.economics(s.art,price).profit)}/шт.\nСкидка площадки остаётся условным параметром, а не управляемой настройкой.`,()=>sellerModel.setPrice(sellerState,s.art,price));}catch(err){$('#pr3-error-'+i).textContent=err.message;}}
+let sellerRnpChannel='all';
+function sellerRnpRows(){const r=periodRange(),by={};DEMO.rnp.filter(x=>inR(x.date,r.from,r.to)&&(sellerRnpChannel==='all'||x.ch===sellerRnpChannel)).forEach(x=>{const k=iso(x.date),a=by[k]||={date:k,rev:0,orders:0,buy:0,ads:0,contrib:0};for(const f of ['rev','orders','buy','ads','contrib'])a[f]+=x[f];});const october=DEMO.ledger.filter(x=>x.date.getMonth()===9),total=october.reduce((a,x)=>a+x.rev,0),share=sellerRnpChannel==='all'?1:october.filter(x=>x.ch===sellerRnpChannel).reduce((a,x)=>a+x.rev,0)/total;return Object.values(by).sort((a,b)=>a.date.localeCompare(b.date)).map(x=>({...x,plan:x.date.startsWith('2026-10')?DEMO.plan.month*share/31:null}));}
+function renderSellerRnp(){const rows=sellerRnpRows(),tot=rows.reduce((a,x)=>{for(const k of ['rev','orders','buy','ads','contrib'])a[k]+=x[k];if(x.plan!=null){a.plan+=x.plan;a.plannedRev+=x.rev;a.plannedDays++;}return a;},{rev:0,orders:0,buy:0,ads:0,contrib:0,plan:0,plannedRev:0,plannedDays:0});$('#p-rnp').innerHTML=sellerHead('rnp','Рука на пульсе: ежедневные продажи, расходы и отклонения')+sellerPeriods()+`<label>Площадка <select onchange="sellerRnpChannel=this.value;renderSellerRnp()"><option value="all" ${sellerRnpChannel==='all'?'selected':''}>Все</option><option value="WB" ${sellerRnpChannel==='WB'?'selected':''}>WB</option><option value="Ozon" ${sellerRnpChannel==='Ozon'?'selected':''}>Ozon</option></select></label><div class="sellerNote">Факты — тот же вымышленный журнал, что в продажах и финансах. План задан только для октября: ${rub(DEMO.plan.month)}, равными долями по дням. При выборе площадки план распределён по её доле октябрьской выручки — учебное допущение. Для других месяцев план не придумывается. Последний день данных — 31.10.2026.</div><div class="grid kpis">${[['Выручка',rub(tot.rev)],['Вклад до постоянных расходов',rub(tot.contrib)],['Реклама',rub(tot.ads)],['Отклонение по дням с планом',tot.plannedDays?rub(tot.plannedRev-tot.plan):'нет плана']].map(x=>`<div class="card kpi"><h3>${x[0]}</h3><div class="v">${x[1]}</div></div>`).join('')}</div><div class="card" style="margin-top:16px"><h3>Ежедневный контроль · ${periodRange().label}</h3><div class="tw"><table class="tbl num"><tr><th>Дата</th><th>Заказы</th><th>Выкупы</th><th>План выручки</th><th>Выручка</th><th>Отклонение</th><th>Реклама</th><th>ДРР</th><th>Вклад</th></tr>${rows.slice().reverse().map(x=>`<tr><td>${x.date}</td><td>${x.orders}</td><td>${x.buy}</td><td>${x.plan==null?'нет плана':rub(x.plan)}</td><td>${rub(x.rev)}</td><td class="${x.plan!=null&&x.rev<x.plan?'down':''}">${x.plan==null?'—':rub(x.rev-x.plan)}</td><td>${rub(x.ads)}</td><td>${x.rev?pct(x.ads/x.rev*100):'—'}</td><td>${rub(x.contrib)}</td></tr>`).join('')}</table></div><p class="sellerSnapshot">Отклонение — сигнал для проверки. Оно само по себе не доказывает влияние цены или рекламы.</p><div class="sellerActions"><button class="btn" onclick="go('products')">Проверить остатки</button><button class="btn" onclick="go('ads')">Проверить рекламу</button><button class="btn" onclick="go('prices')">Проверить цены</button></div></div>`;}
+// Context changes; all pre-existing v2 calculation routines are retained.
+const sellerHomeBefore=renderHome;renderHome=function(){sellerHomeBefore();$('#today').textContent='BrandOS v3 · вымышленный бренд «Линия» · факты на 31.10.2026';};
+const sellerNoteEl=document.querySelector('.demoNotice>span');if(sellerNoteEl)sellerNoteEl.textContent='31.10.2026 · BrandOS v3';
+// Label the legacy price note accurately: changing platform discount alone does not change seller profit in this model.
+const sellerSkuBefore=skuModal;
+skuModal=function(art){sellerSkuBefore(art);const note=$('#mSkuB .note');if(note)note.textContent='Вклад рассчитан по параметрам одной продажи до постоянных расходов. Снижение скидки площадки повышает цену покупателя, но само по себе не уменьшает вклад в этой модели. Связь с будущим спросом здесь не прогнозируется.';};
+
+route();
+</script>
+</body>
+</html>

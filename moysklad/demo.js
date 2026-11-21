@@ -1,0 +1,25 @@
+const DEMO_FIXTURE={"products":[{"sku":"DEMO-001","article":"EX-1","name":"Плитка «Лесная» (демо)","unit":"шт.","qty":100,"avgPrice":1000,"avgCost":600,"revenue":100000,"costSum":60000,"retQty":5,"retRevenue":5000,"retCostSum":3000,"commission":0,"profit":38000},{"sku":"DEMO-002","article":"EX-2","name":"Бордюр «Речной» (демо)","unit":"шт.","qty":80,"avgPrice":500,"avgCost":350,"revenue":40000,"costSum":28000,"retQty":0,"retRevenue":0,"retCostSum":0,"commission":0,"profit":12000},{"sku":"DEMO-003","article":"EX-3","name":"Крошка «Светлая» (демо)","unit":"шт.","qty":50,"avgPrice":200,"avgCost":220,"revenue":10000,"costSum":11000,"retQty":0,"retRevenue":0,"retCostSum":0,"commission":0,"profit":-1000},{"sku":"DEMO-004","article":"EX-4","name":"Ступень «Тихая» (демо)","unit":"шт.","qty":0,"avgPrice":1500,"avgCost":1000,"revenue":0,"costSum":0,"retQty":0,"retRevenue":0,"retCostSum":0,"commission":0,"profit":0}],"customers":[{"customer":"Покупатель А (вымышленный)","qty":100,"revenue":100000,"retRevenue":5000,"profit":38000},{"customer":"Покупатель Б (вымышленный)","qty":80,"revenue":40000,"retRevenue":0,"profit":12000},{"customer":"Покупатель В (вымышленный)","qty":50,"revenue":10000,"retRevenue":0,"profit":-1000}],"stock":[{"sku":"DEMO-001","article":"EX-1","name":"Плитка «Лесная» (демо)","unit":"шт.","balance":12,"available":12,"avgCost":600},{"sku":"DEMO-002","article":"EX-2","name":"Бордюр «Речной» (демо)","unit":"шт.","balance":40,"available":40,"avgCost":350},{"sku":"DEMO-003","article":"EX-3","name":"Крошка «Светлая» (демо)","unit":"шт.","balance":100,"available":100,"avgCost":220},{"sku":"DEMO-004","article":"EX-4","name":"Ступень «Тихая» (демо)","unit":"шт.","balance":10,"available":10,"avgCost":1000}],"categories":{"DEMO-001":"Мощение (демо)","DEMO-002":"Мощение (демо)","DEMO-003":"Декор (демо)","DEMO-004":"Декор (демо)"}};
+function initDemo(){
+  // No access to unrelated localStorage keys, even on file://.
+  const f=JSON.parse(JSON.stringify(DEMO_FIXTURE));
+  const makePeriod=(month,scale)=>({label:month==='10'?'Октябрь 2026 · демо':'Сентябрь 2026 · демо',start:new Date(`2026-${month}-01T12:00:00`),end:new Date(`2026-${month}-${month==='10'?'31':'30'}T12:00:00`),goodSummary:f.products.map(p=>({...p,qty:p.qty*scale,retQty:p.retQty*scale,revenue:p.revenue*scale,costSum:p.costSum*scale,retRevenue:p.retRevenue*scale,retCostSum:p.retCostSum*scale,profit:p.profit*scale})),agentSummary:f.customers.map(p=>({...p,qty:p.qty*scale,revenue:p.revenue*scale,retRevenue:p.retRevenue*scale,profit:p.profit*scale})),goodDetail:[],agentDetail:[]});
+  Object.assign(state,{periods:{'2026-10':makePeriod('10',1),'2026-09':makePeriod('09',0.8)},stock:{updatedAt:+new Date('2026-11-01T12:00:00'),label:'01.11.2026 · демо',rows:f.stock},manualCost:{},categoryMap:f.categories,channelMap:{'Покупатель А (вымышленный)':'Сайт','Покупатель Б (вымышленный)':'Опт','Покупатель В (вымышленный)':'Розница'},plan:{month:'2026-10',revenue:160000,profit:55000},thresholds:{critical:7,warning:14},snapshots:[{ts:+new Date('2026-09-30'),periodLabel:'Сентябрь · демо',revenue:116000,profit:39200},{ts:+new Date('2026-10-31'),periodLabel:'Октябрь · демо',revenue:145000,profit:49000}],currentPeriodKey:'2026-10',activeTab:'overview',sortState:{},filterState:{},_productsCache:null});
+  Object.values(LS).forEach(k=>{try{localStorage.removeItem(k)}catch{}});
+  renderUploadErrors([]); recalcAndRender(); switchTab('overview');
+  document.getElementById('demoReset').onclick=()=>{document.querySelector('.dataTools').open=false;initDemo();};
+  document.getElementById('demoExport').onclick=exportDemoCSV;
+  document.getElementById('demoFiles').onclick=downloadDemoWorkbook;
+}
+function demoWorkbook(){
+  const f=DEMO_FIXTURE,wb=XLSX.utils.book_new();
+  const goods=[['Прибыльность по товарам'],['Код','Артикул','Наименование','Ед.изм','Продажи','','','','Возвраты','',''],['','','','','Кол-во','Себестоимость','Сумма','Сумма себестоимости','Кол-во','Сумма','Сумма себестоимости'],...f.products.map(p=>[p.sku,p.article,p.name,p.unit,p.qty,p.avgCost,p.revenue,p.costSum,p.retQty,p.retRevenue,p.retCostSum])];
+  const agents=[['Прибыльность по покупателям'],['Покупатель','Продажи','','Возвраты','Прибыль'],['','Кол-во','Сумма','Сумма',''],...f.customers.map(p=>[p.customer,p.qty,p.revenue,p.retRevenue,p.profit])];
+  const stock=[['Остатки'],['Код','Артикул','Наименование','Ед.изм','Остаток','Доступно','Себестоимость'],...f.stock.map(p=>[p.sku,p.article,p.name,p.unit,p.balance,p.available,p.avgCost])];
+  for(const [name,rows]of [['Товары',goods],['Покупатели',agents],['Остатки',stock]])XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),name);
+  return wb;
+}
+function downloadDemoWorkbook(){
+  let panel=document.getElementById('demoSamples');
+  if(!panel){panel=document.createElement('div');panel.id='demoSamples';panel.innerHTML='<p>Скачайте каждый учебный отчёт отдельно:</p>'+['Товары','Покупатели','Остатки'].map(n=>'<p><a download href="sample-import/DEMO-'+n+'.xlsx">'+n+' — учебный XLSX</a></p>').join('');document.querySelector('.dataTools').appendChild(panel);}
+  panel.hidden=false;
+}

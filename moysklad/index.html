@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>МойСклад — продажи и прибыль · демо v2</title>
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="vendor/chart.umd.min.js"></script>
+<style>
+/* ============================================================
+   ТЕМА / ПЕРЕМЕННЫЕ (палитра — тёмная тема, фиксирована)
+   ============================================================ */
+:root{
+  --page:#0d0d0d; --surface-1:#1a1a19; --surface-2:#222221;
+  --text-primary:#ffffff; --text-secondary:#c3c2b7; --muted:#898781;
+  --gridline:#2c2c2a; --baseline:#383835; --border:rgba(255,255,255,0.10);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
+  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  --radius:10px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--page);color:var(--text-primary);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;}
+h1,h2,h3,h4{margin:0 0 8px 0;font-weight:600;}
+h1{font-size:20px;} h2{font-size:16px;} h3{font-size:14px;color:var(--text-secondary);}
+a{color:var(--s1);}
+.wrap{max-width:1320px;margin:0 auto;padding:16px;}
+.muted{color:var(--muted);}
+.secondary{color:var(--text-secondary);}
+.small{font-size:12px;}
+.nums{font-variant-numeric:tabular-nums;}
+
+/* header / upload */
+header.top{border-bottom:1px solid var(--border);background:var(--surface-1);}
+.uploadZone{border:1.5px dashed var(--baseline);border-radius:var(--radius);padding:14px 16px;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;cursor:pointer;transition:border-color .15s;}
+.uploadZone.drag{border-color:var(--s1);background:rgba(57,135,229,.06);}
+.uploadZone input[type=file]{display:none;}
+.btn{background:var(--s1);color:#fff;border:none;border-radius:8px;padding:8px 14px;
+  font-size:13px;cursor:pointer;font-weight:600;}
+.btn:hover{filter:brightness(1.08);}
+.btn.secondary{background:transparent;border:1px solid var(--border);color:var(--text-primary);}
+.btn.small{padding:5px 10px;font-size:12px;font-weight:500;}
+.btn.danger{background:var(--critical);}
+select,input[type=text],input[type=number],input[type=date]{
+  background:var(--surface-2);color:var(--text-primary);border:1px solid var(--border);
+  border-radius:6px;padding:6px 8px;font-size:13px;font-family:inherit;}
+label{font-size:12px;color:var(--text-secondary);}
+
+/* tabs */
+nav.tabs{display:flex;gap:2px;margin:14px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+nav.tabs button{background:none;border:none;color:var(--text-secondary);padding:10px 14px;
+  cursor:pointer;font-size:13.5px;font-weight:500;border-bottom:2px solid transparent;}
+nav.tabs button.active{color:var(--text-primary);border-bottom-color:var(--s1);}
+nav.tabs button:hover{color:var(--text-primary);}
+.tabpanel{display:none;}
+.tabpanel.active{display:block;}
+
+/* kpi row */
+.kpiRow{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:14px 0;}
+.kpiCard{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;}
+.kpiCard .val{font-size:20px;font-weight:700;margin-top:2px;}
+.kpiCard .sub{font-size:11.5px;color:var(--muted);margin-top:4px;}
+.badge{display:inline-block;padding:1px 7px;border-radius:20px;font-size:10.5px;font-weight:600;}
+.badge.good{background:rgba(12,163,12,.18);color:var(--good);}
+.badge.warn{background:rgba(250,178,25,.18);color:var(--warning);}
+.badge.crit{background:rgba(208,59,59,.18);color:var(--critical);}
+.badge.muted{background:rgba(137,135,129,.18);color:var(--muted);}
+
+/* cards / sections */
+.card{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;margin-bottom:14px;}
+.grid2{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+@media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr;}}
+
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:12.8px;}
+th{text-align:left;padding:7px 9px;color:var(--muted);font-weight:600;font-size:11.5px;
+  text-transform:uppercase;letter-spacing:.02em;border-bottom:1px solid var(--gridline);
+  cursor:pointer;white-space:nowrap;position:sticky;top:0;background:var(--surface-1);}
+th.sorted{color:var(--text-primary);}
+td{padding:7px 9px;border-bottom:1px solid var(--gridline);white-space:nowrap;}
+tr:hover td{background:rgba(255,255,255,.02);}
+.tableScroll{overflow-x:auto;max-height:520px;overflow-y:auto;}
+.right{text-align:right;}
+.center{text-align:center;}
+
+/* source tag */
+.srcTag{font-size:10px;padding:1px 6px;border-radius:4px;margin-left:5px;}
+.srcTag.report{background:rgba(57,135,229,.18);color:var(--s1);}
+.srcTag.manual{background:rgba(213,81,129,.18);color:var(--s5);}
+.srcTag.none{background:rgba(208,59,59,.14);color:var(--critical);}
+.inlineInput{width:80px;}
+
+/* insights list */
+ul.insights{list-style:none;padding:0;margin:0;}
+ul.insights li{padding:8px 0;border-bottom:1px solid var(--gridline);display:flex;gap:8px;}
+ul.insights li:last-child{border:none;}
+ul.insights li .dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+
+/* progress bars */
+.progOuter{background:var(--surface-2);border-radius:6px;height:16px;position:relative;overflow:hidden;}
+.progFill{height:100%;border-radius:6px;background:var(--s1);}
+.progPace{position:absolute;top:0;bottom:0;width:2px;background:var(--text-primary);}
+
+.errBox{background:rgba(208,59,59,.1);border:1px solid var(--critical);border-radius:8px;
+  padding:12px 14px;color:#ffb3b3;margin:10px 0;font-size:13px;}
+.emptyState{color:var(--muted);padding:30px 10px;text-align:center;font-size:13px;}
+.footnote{font-size:11px;color:var(--muted);margin-top:6px;}
+.filtersRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+.pillRow{display:flex;gap:6px;flex-wrap:wrap;}
+details.itemRow summary{cursor:pointer;}
+.expandBox{background:var(--surface-2);border-radius:8px;padding:12px;margin:6px 0 10px 0;}
+canvas{max-width:100%;}
+.demoBanner{padding:16px;background:#193528;color:#f4fff6;font-size:14px;line-height:1.6}.demoActions{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}body{font-size:16px}label,.small,.footnote,.filtersRow,.btn,nav.tabs button{font-size:14px}.muted{color:#b4b3a9}.grid2>* ,.grid3>*{min-width:0}input,select{max-width:100%}table{font-size:14px}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #c6ff4d;outline-offset:2px}@media(max-width:600px){.wrap{padding:10px}.grid2,.grid3{grid-template-columns:1fr!important}.demoActions .btn{width:100%}.filtersRow{align-items:stretch}.filtersRow>input,.filtersRow>select{width:100%!important}.kpiRow{grid-template-columns:repeat(2,minmax(0,1fr))}.kpiCard{min-width:0}.kpiCard .val{font-size:18px}.tableScroll{max-width:100%;overflow:auto}nav.tabs button{padding:12px 10px}} </style>
+<link rel="stylesheet" href="client-v2.css"></head>
+<body><div class="demoBanner"><strong>Демонстрационные данные</strong><span> · собственная разработка Татьяны</span><button class="btn secondary" id="demoReset">Вернуть пример</button></div><header class="top">
+  <div class="wrap">
+    <h1>Продажи и прибыль</h1><p class="secondary intro">Аналитика бизнеса по выгрузкам «МойСклад». Все товары и суммы вымышлены.</p>
+    <details class="dataTools"><summary>Данные и экспорт</summary><div class="demoActions"><button class="btn secondary" id="demoExport">Экспорт CSV</button><button class="btn secondary" id="demoFiles">Учебные XLSX</button></div><div class="uploadZone" id="uploadZone">
+      <div id="uploadIcon">📁</div>
+      <div>
+        <div><b>Перетащите файлы сюда</b> или <span style="color:var(--s1)">выберите файлы</span></div>
+        <div class="small muted">Прибыльность по товарам / по товарам с детализацией / по покупателям / по покупателям с детализацией / Остатки — .xls, .xlsx</div>
+      </div>
+      <input type="file" id="fileInput" multiple accept=".xls,.xlsx">
+    </div>
+    <div id="uploadErrors"></div></details>
+    <div class="filtersRow" style="margin-top:10px;">
+      <label>Период: <select id="periodSelect"></select></label>
+      <span id="periodInfo" class="small muted"></span>
+      <button class="btn small secondary" id="snapshotBtn" hidden>Сохранить срез периода</button>
+      <span class="small muted" id="dataCoverage"></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="kpiRow" id="kpiRow"></div>
+
+  <nav class="tabs" id="tabs"><button data-tab="overview" class="active">Продажи и прибыль</button><button data-tab="products">Товары</button><button data-tab="unit">Прибыль с единицы</button><button data-tab="channels">Каналы продаж</button><button data-tab="planfact">План</button><button data-tab="stock">Остатки</button></nav>
+
+  <section class="tabpanel active" id="tab-overview"></section>
+  <section class="tabpanel" id="tab-planfact"></section>
+  <section class="tabpanel" id="tab-unit"></section>
+  <section class="tabpanel" id="tab-products"></section>
+  <section class="tabpanel" id="tab-channels"></section>
+  <section class="tabpanel" id="tab-stock"></section>
+</div>
+
+<script>
+/* ==================================================================================
+   ДАШБОРД «МОЙ СКЛАД» — ПРИРОДНЫЙ КАМЕНЬ
+   Один файл, без сборщиков. Разделы ниже промаркированы для дальнейшей доработки:
+   1. UTILS            — форматирование, даты, general helpers
+   2. STORAGE           — localStorage: ручные себестоимости/каналы/категории/план/пороги/снапшоты
+   3. PARSER             — определение типа отчёта МойСклад и разбор строк
+   4. STORE              — приём файлов, слияние периодов, состояние приложения
+   5. METRICS            — расчёт KPI, ABC, категорий, каналов, юнит-экономики, остатков, автовыводов
+   6. CHARTS             — обёртки над Chart.js (waterfall, donut, гистограмма, тренд)
+   7. RENDER             — рендер вкладок
+   8. EVENTS / INIT       — обработчики и запуск
+   ================================================================================== */
+
+/* ============================== 1. UTILS ============================== */
+const fmtRub = n => (n===null||n===undefined||isNaN(n)) ? '—' :
+  Math.round(n).toLocaleString('ru-RU') + ' ₽';
+const fmtRub2 = n => (n===null||n===undefined||isNaN(n)) ? '—' :
+  n.toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' ₽';
+const fmtNum = (n,d=0) => (n===null||n===undefined||isNaN(n)) ? '—' :
+  n.toLocaleString('ru-RU',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtPct = (n,d=1) => (n===null||n===undefined||isNaN(n)) ? '—' :
+  (n*100).toLocaleString('ru-RU',{minimumFractionDigits:d,maximumFractionDigits:d}) + '%';
+const fmtDate = d => { if(!d) return '—'; const dt = (d instanceof Date)? d : new Date(d);
+  if(isNaN(dt.getTime())) return '—';
+  return dt.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'}); };
+const todayISO = () => new Date().toISOString().slice(0,10);
+const uid = () => Math.random().toString(36).slice(2,10);
+
+// Excel serial date -> JS Date (fallback, если SheetJS не отдал Date напрямую)
+function excelSerialToDate(v){
+  if (v instanceof Date) return v;
+  if (typeof v !== 'number') return null;
+  const utcDays = Math.floor(v - 25569);
+  const utcMs = utcDays*86400*1000;
+  const fracDay = v - Math.floor(v);
+  return new Date(utcMs + Math.round(fracDay*86400)*1000);
+}
+function toDateSafe(v){
+  if (!v && v!==0) return null;
+  if (v instanceof Date) return isNaN(v.getTime())?null:v;
+  if (typeof v === 'number') return excelSerialToDate(v);
+  if (typeof v === 'string'){
+    // формат ДД.ММ.ГГГГ ЧЧ:ММ или ДД.ММ.ГГГГ
+    const m = v.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})(?:\s+(\d{1,2}):(\d{2}))?/);
+    if(m){
+      let yr = parseInt(m[3],10); if(yr<100) yr+=2000;
+      return new Date(yr, parseInt(m[2],10)-1, parseInt(m[1],10), m[4]?parseInt(m[4],10):0, m[5]?parseInt(m[5],10):0);
+    }
+    const d = new Date(v); return isNaN(d.getTime())?null:d;
+  }
+  return null;
+}
+function num(v){
+  if (v===null||v===undefined||v==='') return null;
+  if (typeof v === 'number') return isNaN(v)?null:v;
+  const s = String(v).replace(/\s/g,'').replace(',','.');
+  const f = parseFloat(s);
+  return isNaN(f) ? null : f;
+}
+function str(v){ return (v===null||v===undefined) ? '' : String(v).trim(); }
+function normalize(v){
+  return str(v).toLowerCase().replace(/\s+/g,' ').trim();
+}
+function daysBetween(a,b){ return Math.round((b-a)/86400000); }
+function debounce(fn,ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }
+function escapeHtml(s){ return str(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+class ParseError extends Error{}
+
+/* ============================== 2. STORAGE ============================== */
+const LS = {
+  periods:      'tatyana_demo_msd_v2_periods_v1',
+  stock:        'tatyana_demo_msd_v2_stock_v1',
+  manualCost:   'tatyana_demo_msd_v2_manual_cost_v1',
+  channelMap:   'tatyana_demo_msd_v2_channel_map_v1',
+  categoryMap:  'tatyana_demo_msd_v2_category_map_v1',
+  plan:         'tatyana_demo_msd_v2_plan_v1',
+  thresholds:   'tatyana_demo_msd_v2_thresholds_v1',
+  snapshots:    'tatyana_demo_msd_v2_snapshots_v1',
+};
+function lsGet(key, fallback){
+  try{ const v = localStorage.getItem(key); return v? JSON.parse(v) : fallback; }
+  catch(e){ return fallback; }
+}
+function lsSet(key, val){
+  try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){ console.warn('localStorage недоступен', e); }
+}
+
+/* ============================== ГЛОБАЛЬНОЕ СОСТОЯНИЕ ============================== */
+function serializePeriodsForStorage(periods){
+  const out = {};
+  for(const k in periods){
+    const p = periods[k];
+    out[k] = {
+      label:p.label,
+      start:p.start?p.start.toISOString():null,
+      end:p.end?p.end.toISOString():null,
+      goodSummary:p.goodSummary||[],
+      agentSummary:p.agentSummary||[],
+      goodDetail:(p.goodDetail||[]).map(it=>({...it,date:it.date?it.date.toISOString():null})),
+      agentDetail:(p.agentDetail||[]).map(it=>({...it,date:it.date?it.date.toISOString():null})),
+    };
+  }
+  return out;
+}
+function deserializePeriodsFromStorage(raw){
+  const out = {};
+  for(const k in raw){
+    const p = raw[k];
+    out[k] = {
+      label:p.label,
+      start:p.start?new Date(p.start):null,
+      end:p.end?new Date(p.end):null,
+      goodSummary:p.goodSummary||[],
+      agentSummary:p.agentSummary||[],
+      goodDetail:(p.goodDetail||[]).map(it=>({...it,date:it.date?new Date(it.date):null})),
+      agentDetail:(p.agentDetail||[]).map(it=>({...it,date:it.date?new Date(it.date):null})),
+    };
+  }
+  return out;
+}
+
+const state = {
+  periods: deserializePeriodsFromStorage(lsGet(LS.periods, {})),  // periodKey -> {label,start,end,goodSummary,goodDetail,agentSummary,agentDetail}
+  stock: lsGet(LS.stock, null),             // {updatedAt,label,rows}
+  manualCost: lsGet(LS.manualCost, {}),     // sku -> {value, confirmedZero, updatedAt}
+  channelMap: lsGet(LS.channelMap, {}),     // customerName -> channel
+  categoryMap: lsGet(LS.categoryMap, {}),   // sku -> category
+  plan: lsGet(LS.plan, {}),                 // {month:'YYYY-MM', revenue, profit, categories:{cat:{revenue,profit}}}
+  thresholds: lsGet(LS.thresholds, {critical:7, warning:14}),
+  snapshots: lsGet(LS.snapshots, []),       // [{ts, periodLabel, revenue, profit, margin}]
+  currentPeriodKey: null,
+  activeTab: 'overview',
+  sortState: {},   // per table
+  filterState: {},
+};
+
+/* ==================================================================================
+   3. PARSER
+   Разбор .xls/.xlsx выгрузок «Мой Склад». Тип отчёта определяется по тексту заголовка
+   внутри файла и по набору колонок — НЕ по имени файла. Если структура не опознана,
+   бросаем ParseError с понятным пользователю текстом (какой колонки не хватает).
+   ================================================================================== */
+
+// Ищет индекс колонки, где combined-заголовок содержит ВСЕ токены required и НИ ОДНОГО из exclude
+function findCol(columns, required, exclude){
+  exclude = exclude || [];
+  for (let i=0;i<columns.length;i++){
+    const c = columns[i];
+    if (!c) continue;
+    if (required.every(t=>c.includes(t)) && !exclude.some(t=>c.includes(t))) return i;
+  }
+  return -1;
+}
+
+// Строка целиком пустая?
+function rowIsBlank(row){
+  return row.every(c => c===''||c===null||c===undefined);
+}
+// Похоже на итоговую строку ("Итого:") — либо в колонке имени, либо где-то ещё в строке
+function rowIsTotals(row, nameIdx){
+  const nameCell = normalize(row[nameIdx]);
+  if (nameCell.startsWith('итого')) return true;
+  return row.some(c => typeof c==='string' && normalize(c).startsWith('итого'));
+}
+
+// Собирает "плоские" колонки из одной строки заголовка
+function mapHeaderSingleRow(row){
+  return row.map(c => normalize(c) || null);
+}
+// Собирает колонки из двух строк заголовка (группа сверху + подзаголовок снизу),
+// с протяжкой группы вправо по пустым ячейкам (merge-эффект Excel)
+function mapHeaderTwoRows(groupRow, subRow){
+  const len = Math.max(groupRow.length, subRow.length);
+  const cols = []; let lastGroup = '';
+  for (let c=0;c<len;c++){
+    const g = normalize(groupRow[c]);
+    const s = normalize(subRow[c]);
+    if (g) lastGroup = g;
+    if (s) cols.push(lastGroup ? (lastGroup+' — '+s) : s);
+    else if (g) cols.push(g);
+    else cols.push(null);
+  }
+  return cols;
+}
+
+// Определяет тип отчёта по тексту заголовка (первые ~6 строк) и, если не вышло, по набору колонок
+function detectReportType(rows, headerRowIdx){
+  let titleText = '';
+  for (let r=0;r<Math.min(6,rows.length);r++){
+    for (const cell of rows[r]){
+      if (typeof cell==='string' && cell.trim()) titleText += ' ' + cell.trim().toLowerCase();
+    }
+  }
+  if (titleText.includes('товарам') && (titleText.includes('детализацией'))) return 'goodDetail';
+  if (titleText.includes('товарам')) return 'goodSummary';
+  if (titleText.includes('покупателям') && titleText.includes('детализацией')) return 'agentDetail';
+  if (titleText.includes('покупателям')) return 'agentSummary';
+  if (titleText.includes('остатки')) return 'stock';
+
+  // fallback: по набору заголовков строки headerRowIdx (+ headerRowIdx+1)
+  const tokens = new Set();
+  for (const r of [rows[headerRowIdx], rows[headerRowIdx+1]||[]]){
+    for (const cell of r){ const n = normalize(cell); if(n) tokens.add(n); }
+  }
+  const has = t => Array.from(tokens).some(x=>x.includes(t));
+  if (has('доступно') && has('остаток')) return 'stock';
+  if (has('покупатель')) return 'agentSummary';
+  if (has('тип документа') && (has('код')||has('ед.изм')||has('кол-во'))) return 'goodDetail';
+  if (has('тип документа')) return 'agentDetail';
+  if (has('код') && has('наименование')) return 'goodSummary';
+  return null;
+}
+
+// Ищет строку заголовка: первая строка, где есть ячейка 'наименование' или 'покупатель'
+function findHeaderRow(rows){
+  for (let r=0;r<Math.min(25,rows.length);r++){
+    for (const cell of rows[r]){
+      const n = normalize(cell);
+      if (n==='наименование' || n==='покупатель') return r;
+    }
+  }
+  return -1;
+}
+
+// Разбирает один лист (rows — массив массивов, как из XLSX.utils.sheet_to_json({header:1}))
+function parseSheet(rows, fileLabel){
+  const headerRowIdx = findHeaderRow(rows);
+  if (headerRowIdx === -1){
+    throw new ParseError(`Файл «${fileLabel}»: не нашла заголовок таблицы (ожидала колонку «Наименование» или «Покупатель»). Похоже, это не отчёт «Прибыльность» или «Остатки» из Мой Склад, либо формат экспорта изменился.`);
+  }
+  const reportType = detectReportType(rows, headerRowIdx);
+  if (!reportType){
+    const found = (rows[headerRowIdx]||[]).map(c=>str(c)).filter(Boolean).join(', ');
+    throw new ParseError(`Файл «${fileLabel}»: не удалось определить тип отчёта. Найденные заголовки колонок: ${found||'нет'}. Ожидаются отчёты «Прибыльность по товарам», «...с детализацией», «Прибыльность по покупателям», «...с детализацией» или «Остатки».`);
+  }
+
+  const twoRow = (reportType==='goodSummary' || reportType==='agentSummary');
+  let columns, dataStart;
+  if (twoRow){
+    columns = mapHeaderTwoRows(rows[headerRowIdx]||[], rows[headerRowIdx+1]||[]);
+    dataStart = headerRowIdx+2;
+  } else {
+    columns = mapHeaderSingleRow(rows[headerRowIdx]||[]);
+    dataStart = headerRowIdx+1;
+  }
+  while (dataStart<rows.length && rowIsBlank(rows[dataStart])) dataStart++;
+
+  const need = (required, exclude, label) => {
+    const idx = findCol(columns, required, exclude);
+    if (idx===-1) throw new ParseError(`Файл «${fileLabel}» (${reportType}): не нашла колонку «${label}». Найденные заголовки: ${columns.filter(Boolean).join(' | ')}.`);
+    return idx;
+  };
+  const opt = (required, exclude) => findCol(columns, required, exclude);
+
+  if (reportType==='goodSummary'){
+    const idx = {
+      sku: need(['код'],[],'Код'),
+      article: opt(['артикул']),
+      name: need(['наименование'],[],'Наименование'),
+      unit: opt(['ед.изм']),
+      qty: need(['продажи','кол-во'],[],'Продажи — Кол-во'),
+      price: opt(['продажи','цена']),
+      cost: opt(['продажи','себестоимость']),
+      commission: opt(['продажи','комиссия']),
+      revenue: need(['продажи','сумма'],['себест'],'Продажи — Сумма'),
+      costSum: opt(['продажи','сумма себест']),
+      retQty: opt(['возвраты','кол-во']),
+      retRevenue: opt(['возвраты','сумма'],['себест']),
+      retCostSum: opt(['возвраты','сумма себест']),
+      marginOnCost: opt(['рентабельность','товара']),
+      marginOnSales: opt(['рентабельность','продаж']),
+      profit: opt(['прибыль']),
+    };
+    const items = [];
+    for (let r=dataStart;r<rows.length;r++){
+      const row = rows[r]; if(!row || rowIsBlank(row)) continue;
+      if (rowIsTotals(row, idx.name)) continue;
+      const name = str(row[idx.name]); if(!name) continue;
+      items.push({
+        sku: str(row[idx.sku]) || ('name:'+name),
+        article: idx.article>=0? str(row[idx.article]) : '',
+        name, unit: idx.unit>=0? str(row[idx.unit]) : '',
+        qty: num(row[idx.qty])||0,
+        avgPrice: idx.price>=0? num(row[idx.price]) : null,
+        avgCost: idx.cost>=0? num(row[idx.cost]) : null,
+        commission: idx.commission>=0? (num(row[idx.commission])||0) : 0,
+        revenue: num(row[idx.revenue])||0,
+        costSum: idx.costSum>=0? (num(row[idx.costSum])||0) : null,
+        retQty: idx.retQty>=0? (num(row[idx.retQty])||0):0,
+        retRevenue: idx.retRevenue>=0? (num(row[idx.retRevenue])||0):0,
+        retCostSum: idx.retCostSum>=0? (num(row[idx.retCostSum])||0):0,
+        marginOnCost: idx.marginOnCost>=0? num(row[idx.marginOnCost]) : null,
+        marginOnSales: idx.marginOnSales>=0? num(row[idx.marginOnSales]) : null,
+        profit: idx.profit>=0? num(row[idx.profit]) : null,
+      });
+    }
+    return {type:'goodSummary', items};
+  }
+
+  if (reportType==='goodDetail'){
+    const idx = {
+      sku: need(['код'],[],'Код'),
+      article: opt(['артикул']),
+      name: need(['наименование'],[],'Наименование'),
+      docType: opt(['тип документа']),
+      docNumber: opt(['номер']),
+      time: opt(['время']),
+      unit: opt(['ед.изм']),
+      qty: opt(['кол-во']),
+      price: opt(['цена']),
+      cost: opt(['себест'],['сумма']),
+      sum: opt(['сумма'],['себест']),
+      costSum: opt(['сумма','себест']),
+    };
+    const items = [];
+    for (let r=dataStart;r<rows.length;r++){
+      const row = rows[r]; if(!row || rowIsBlank(row)) continue;
+      if (rowIsTotals(row, idx.name)) continue;
+      const name = str(row[idx.name]); if(!name) continue;
+      items.push({
+        sku: str(row[idx.sku]) || ('name:'+name),
+        name, docType: idx.docType>=0? str(row[idx.docType]):'',
+        docNumber: idx.docNumber>=0? str(row[idx.docNumber]):'',
+        date: idx.time>=0? toDateSafe(row[idx.time]) : null,
+        unit: idx.unit>=0? str(row[idx.unit]):'',
+        qty: idx.qty>=0? (num(row[idx.qty])||0):0,
+        price: idx.price>=0? num(row[idx.price]):null,
+        cost: idx.cost>=0? num(row[idx.cost]):null,
+        sum: idx.sum>=0? (num(row[idx.sum])||0):0,
+        costSum: idx.costSum>=0? (num(row[idx.costSum])||0):0,
+      });
+    }
+    return {type:'goodDetail', items};
+  }
+
+  if (reportType==='agentSummary'){
+    const idx = {
+      customer: need(['покупатель'],[],'Покупатель'),
+      qty: opt(['продажи','кол-во']),
+      avgCheck: opt(['продажи','средний чек']),
+      revenue: need(['продажи','сумма'],['себест'],'Продажи — Сумма'),
+      costSum: opt(['продажи','сумма себест']),
+      retQty: opt(['возвраты','кол-во']),
+      retRevenue: opt(['возвраты','сумма'],['себест']),
+      retCostSum: opt(['возвраты','сумма себест']),
+      marginOnCost: opt(['рентабельность','товара']),
+      marginOnSales: opt(['рентабельность','продаж']),
+      profit: opt(['прибыль']),
+    };
+    const items = [];
+    for (let r=dataStart;r<rows.length;r++){
+      const row = rows[r]; if(!row || rowIsBlank(row)) continue;
+      if (rowIsTotals(row, idx.customer)) continue;
+      const customer = str(row[idx.customer]); if(!customer) continue;
+      items.push({
+        customer,
+        qty: idx.qty>=0? (num(row[idx.qty])||0):0,
+        avgCheck: idx.avgCheck>=0? num(row[idx.avgCheck]):null,
+        revenue: num(row[idx.revenue])||0,
+        costSum: idx.costSum>=0? (num(row[idx.costSum])||0):null,
+        retQty: idx.retQty>=0? (num(row[idx.retQty])||0):0,
+        retRevenue: idx.retRevenue>=0? (num(row[idx.retRevenue])||0):0,
+        retCostSum: idx.retCostSum>=0? (num(row[idx.retCostSum])||0):0,
+        marginOnCost: idx.marginOnCost>=0? num(row[idx.marginOnCost]):null,
+        marginOnSales: idx.marginOnSales>=0? num(row[idx.marginOnSales]):null,
+        profit: idx.profit>=0? num(row[idx.profit]):null,
+      });
+    }
+    return {type:'agentSummary', items};
+  }
+
+  if (reportType==='agentDetail'){
+    const idx = {
+      customer: need(['наименование'],[],'Наименование (покупатель)'),
+      docType: opt(['тип документа']),
+      docNumber: opt(['номер']),
+      time: opt(['время']),
+      sum: opt(['сумма'],['себест']),
+      costSum: opt(['сумма','себест']),
+    };
+    const items = [];
+    for (let r=dataStart;r<rows.length;r++){
+      const row = rows[r]; if(!row || rowIsBlank(row)) continue;
+      if (rowIsTotals(row, idx.customer)) continue;
+      const customer = str(row[idx.customer]); if(!customer) continue;
+      items.push({
+        customer, docType: idx.docType>=0? str(row[idx.docType]):'',
+        docNumber: idx.docNumber>=0? str(row[idx.docNumber]):'',
+        date: idx.time>=0? toDateSafe(row[idx.time]):null,
+        sum: idx.sum>=0? (num(row[idx.sum])||0):0,
+        costSum: idx.costSum>=0? (num(row[idx.costSum])||0):0,
+      });
+    }
+    return {type:'agentDetail', items};
+  }
+
+  if (reportType==='stock'){
+    const idx = {
+      sku: need(['код'],[],'Код'),
+      article: opt(['артикул']),
+      name: need(['наименование'],[],'Наименование'),
+      unit: opt(['ед.изм']),
+      available: opt(['доступно']),
+      reserve: opt(['резерв']),
+      incoming: opt(['ожидание']),
+      balance: need(['остаток'],[],'Остаток'),
+      avgCost: opt(['себестоимость'],['сумма']),
+      costSum: opt(['сумма','себестоимост']),
+      sellPrice: opt(['цена продажи']),
+      sellSum: opt(['сумма продажи']),
+      daysInStock: opt(['дней на складе']),
+    };
+    const items = [];
+    for (let r=dataStart;r<rows.length;r++){
+      const row = rows[r]; if(!row || rowIsBlank(row)) continue;
+      if (rowIsTotals(row, idx.name)) continue;
+      const name = str(row[idx.name]); if(!name) continue;
+      items.push({
+        sku: str(row[idx.sku]) || ('name:'+name),
+        article: idx.article>=0? str(row[idx.article]):'',
+        name, unit: idx.unit>=0? str(row[idx.unit]):'',
+        available: idx.available>=0? num(row[idx.available]):null,
+        reserve: idx.reserve>=0? num(row[idx.reserve]):null,
+        incoming: idx.incoming>=0? num(row[idx.incoming]):null,
+        balance: num(row[idx.balance])||0,
+        avgCost: idx.avgCost>=0? num(row[idx.avgCost]):null,
+        costSum: idx.costSum>=0? num(row[idx.costSum]):null,
+        sellPrice: idx.sellPrice>=0? num(row[idx.sellPrice]):null,
+        sellSum: idx.sellSum>=0? num(row[idx.sellSum]):null,
+        daysInStock: idx.daysInStock>=0? num(row[idx.daysInStock]):null,
+      });
+    }
+    return {type:'stock', items};
+  }
+  throw new ParseError(`Файл «${fileLabel}»: неизвестный тип отчёта.`);
+}
+
+// Читает файл (ArrayBuffer) через SheetJS и парсит первый непустой лист
+async function parseFile(file){
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, {type:'array', cellDates:true, codepage:1251});
+  let lastErr = null;
+  for (const sheetName of wb.SheetNames){
+    const sheet = wb.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(sheet, {header:1, raw:true, defval:''});
+    if (!rows || rows.length===0) continue;
+    try{
+      const res = parseSheet(rows, file.name);
+      return res;
+    }catch(e){
+      if (e instanceof ParseError){ lastErr = e; continue; }
+      throw e;
+    }
+  }
+  throw lastErr || new ParseError(`Файл «${file.name}»: не нашла данных ни на одном листе.`);
+}
+
+/* ============================== МИНИ-МОДАЛКА (замена/объединение периодов и т.п.) ============================== */
+function askChoice(title, text, options){
+  // options: [{key,label,primary}]; возвращает Promise<key|null>
+  return new Promise(resolve=>{
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    const box = document.createElement('div');
+    box.style.cssText = 'background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:20px;max-width:440px;width:90%;';
+    box.innerHTML = `<h2>${escapeHtml(title)}</h2><p class="secondary" style="font-size:13px;">${text}</p><div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px;" id="modalBtns"></div>`;
+    overlay.appendChild(box); document.body.appendChild(overlay);
+    const btnRow = box.querySelector('#modalBtns');
+    options.forEach(opt=>{
+      const b = document.createElement('button');
+      b.className = 'btn' + (opt.primary? '' : ' secondary');
+      b.textContent = opt.label;
+      b.onclick = () => { document.body.removeChild(overlay); resolve(opt.key); };
+      btnRow.appendChild(b);
+    });
+  });
+}
+function askPrompt(title, text, placeholder){
+  return new Promise(resolve=>{
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    const box = document.createElement('div');
+    box.style.cssText = 'background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:20px;max-width:420px;width:90%;';
+    box.innerHTML = `<h2>${escapeHtml(title)}</h2><p class="secondary" style="font-size:13px;">${text}</p>
+      <input type="text" id="modalInput" placeholder="${escapeHtml(placeholder||'')}" style="width:100%;margin-top:6px;">
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
+        <button class="btn secondary" id="modalCancel">Отмена</button>
+        <button class="btn" id="modalOk">ОК</button>
+      </div>`;
+    overlay.appendChild(box); document.body.appendChild(overlay);
+    const input = box.querySelector('#modalInput'); input.focus();
+    box.querySelector('#modalCancel').onclick = ()=>{ document.body.removeChild(overlay); resolve(null); };
+    box.querySelector('#modalOk').onclick = ()=>{ const v=input.value.trim(); document.body.removeChild(overlay); resolve(v||null); };
+    input.addEventListener('keydown', e=>{ if(e.key==='Enter') box.querySelector('#modalOk').click(); });
+  });
+}
+
+/* ==================================================================================
+   4. STORE — приём распарсенных файлов, определение/слияние периодов, персист
+   ================================================================================== */
+
+function periodKeyFromDates(start,end){
+  if(start&&end&&start.getDate()===1&&start.getFullYear()===end.getFullYear()&&start.getMonth()===end.getMonth()&&end.getDate()===daysInMonth(end.getFullYear(),end.getMonth())) return start.getFullYear()+'-'+String(start.getMonth()+1).padStart(2,'0');
+  return (start?start.toISOString().slice(0,10):'?') + '_' + (end?end.toISOString().slice(0,10):'?');
+}
+function periodLabelFromDates(start,end){
+  if(!start||!end) return 'период не определён';
+  return fmtDate(start)+' – '+fmtDate(end);
+}
+
+function dedupDetail(rows){
+  const seen = new Set(); const out = [];
+  for(const r of rows){
+    const key = (r.docType||'')+'|'+(r.docNumber||'')+'|'+(r.sku||r.customer||'')+'|'+(r.date?r.date.getTime():'');
+    if(seen.has(key)) continue; seen.add(key); out.push(r);
+  }
+  return out;
+}
+
+// Основная точка входа: пользователь выбрал файлы -> парсим все -> группируем -> сохраняем
+async function ingestFiles(fileList){
+  const errors = [];
+  const parsedByType = {goodSummary:[], goodDetail:[], agentSummary:[], agentDetail:[], stock:[]};
+  for (const file of fileList){
+    try{
+      const res = await parseFile(file);
+      parsedByType[res.type].push({fileName:file.name, items:res.items});
+    }catch(e){
+      errors.push(e.message || String(e));
+    }
+  }
+  if (errors.length){
+    renderUploadErrors(errors);
+  } else {
+    renderUploadErrors([]);
+  }
+  const anyGood = parsedByType.goodSummary.length||parsedByType.goodDetail.length||
+                  parsedByType.agentSummary.length||parsedByType.agentDetail.length;
+
+  // --- Остатки: заменяют текущий снимок (спрашиваем подтверждение, если уже есть) ---
+  if (parsedByType.stock.length){
+    const rows = parsedByType.stock.flatMap(f=>f.items);
+    let proceed = true;
+    if (state.stock && state.stock.rows && state.stock.rows.length){
+      const choice = await askChoice('Обновить остатки?',
+        `Уже загружены остатки от ${fmtDate(new Date(state.stock.updatedAt))}. Заменить их новой выгрузкой?`,
+        [{key:'replace',label:'Заменить',primary:true},{key:'cancel',label:'Отмена'}]);
+      proceed = choice==='replace';
+    }
+    if (proceed){
+      state.stock = {updatedAt: Date.now(), rows};
+      lsSet(LS.stock, state.stock);
+    }
+  }
+
+  if (!anyGood){
+    if (!parsedByType.stock.length && !errors.length){
+      renderUploadErrors(['Не нашла ни одного файла подходящего типа. Проверьте, что загружены отчёты «Прибыльность» или «Остатки» из Мой Склад.']);
+    }
+    recalcAndRender();
+    return;
+  }
+
+  // --- Определяем период по датам детализации (если есть) ---
+  let start=null, end=null;
+  const allDates = [];
+  parsedByType.goodDetail.forEach(f=>f.items.forEach(it=>{ if(it.date) allDates.push(it.date); }));
+  parsedByType.agentDetail.forEach(f=>f.items.forEach(it=>{ if(it.date) allDates.push(it.date); }));
+  if (allDates.length){
+    start = new Date(Math.min(...allDates.map(d=>d.getTime())));
+    end = new Date(Math.max(...allDates.map(d=>d.getTime())));
+  }
+
+  let periodKey, label;
+  if (start && end){
+    periodKey = periodKeyFromDates(start,end);
+    label = periodLabelFromDates(start,end);
+  } else {
+    // нет детализации — просим пользователя подписать период вручную
+    const manualLabel = await askPrompt('Укажите период',
+      'В загруженных файлах нет отчёта «с детализацией», поэтому даты периода определить автоматически не получится. Укажите границы периода в формате ГГГГ-ММ-ДД — ГГГГ-ММ-ДД (например: 2026-10-01 — 2026-10-31).',
+      'Сентябрь 2026');
+    if (!manualLabel) { recalcAndRender(); return; }
+    const match = manualLabel.match(/^(\d{4}-\d{2}-\d{2})\s+—\s+(\d{4}-\d{2}-\d{2})$/);
+    if (!match) { renderUploadErrors(['Введите период: ГГГГ-ММ-ДД — ГГГГ-ММ-ДД.']); return; }
+    start=new Date(match[1]+'T12:00:00'); end=new Date(match[2]+'T12:00:00');
+    if (!Number.isFinite(+start)||!Number.isFinite(+end)||end<start) { renderUploadErrors(['Некорректные даты периода.']); return; }
+    label=periodLabelFromDates(start,end); periodKey=periodKeyFromDates(start,end);
+  }
+
+  // --- конфликт с уже загруженным периодом ---
+  let mode = 'new';
+  if (state.periods[periodKey]){
+    const choice = await askChoice('Период уже загружен',
+      `За период «${label}» данные уже есть. Заменить старые данные новыми, или объединить (например, если один файл — черновик, а второй — обновлённая выгрузка)?`,
+      [{key:'replace',label:'Заменить',primary:true},{key:'merge',label:'Объединить'},{key:'cancel',label:'Отмена'}]);
+    if (choice==='cancel'){ recalcAndRender(); return; }
+    mode = choice;
+  }
+
+  const existing = state.periods[periodKey] || {label, start, end, goodSummary:[], goodDetail:[], agentSummary:[], agentDetail:[]};
+  const period = {
+    label, start, end,
+    goodSummary: parsedByType.goodSummary.length ? parsedByType.goodSummary.flatMap(f=>f.items) : existing.goodSummary,
+    agentSummary: parsedByType.agentSummary.length ? parsedByType.agentSummary.flatMap(f=>f.items) : existing.agentSummary,
+    goodDetail: parsedByType.goodDetail.length
+      ? (mode==='merge' ? dedupDetail([...(existing.goodDetail||[]), ...parsedByType.goodDetail.flatMap(f=>f.items)]) : parsedByType.goodDetail.flatMap(f=>f.items))
+      : existing.goodDetail,
+    agentDetail: parsedByType.agentDetail.length
+      ? (mode==='merge' ? dedupDetail([...(existing.agentDetail||[]), ...parsedByType.agentDetail.flatMap(f=>f.items)]) : parsedByType.agentDetail.flatMap(f=>f.items))
+      : existing.agentDetail,
+  };
+  state.periods[periodKey] = period;
+  state.currentPeriodKey = periodKey;
+  lsSet(LS.periods, serializePeriodsForStorage(state.periods));
+
+  recalcAndRender();
+}
+
+/* ==================================================================================
+   5. METRICS
+   Расчёт: себестоимость (источник), юнит-экономика, ABC, категории, каналы,
+   остатки/скорость продаж, KPI, автовыводы.
+   ================================================================================== */
+
+function getCurrentPeriod(){
+  if (!state.currentPeriodKey) return null;
+  return state.periods[state.currentPeriodKey] || null;
+}
+function periodDays(period){
+  if (!period || !period.start || !period.end) return null;
+  return Math.max(1, daysBetween(period.start, period.end)+1);
+}
+function daysElapsedInMonth(dateRef){
+  const d = dateRef||new Date();
+  return d.getDate();
+}
+function daysInMonth(year, monthIdx){ return new Date(year, monthIdx+1, 0).getDate(); }
+
+// Определяет себестоимость товара: приоритет вручную > из отчёта (продажи) > из отчёта (остатки) > нет данных
+function resolveCost(sku, reportCostPerUnit, stockCostPerUnit){
+  const manual = state.manualCost[sku];
+  if (manual && manual.value!=null && manual.value>=0){
+    return {value: manual.value, source:'manual'};
+  }
+  if (reportCostPerUnit!=null){
+    return {value: reportCostPerUnit, source:'report'};
+  }
+  if (stockCostPerUnit!=null){
+    return {value: stockCostPerUnit, source:'report-stock'};
+  }
+  return {value:null, source:'none'};
+}
+
+// Собирает объединённый список товаров: продажи текущего периода ∪ позиции из «Остатки»
+function buildProducts(){
+  const period = getCurrentPeriod();
+  const stock = state.stock;
+  const bySku = {};
+
+  if (period){
+    for (const it of period.goodSummary){
+      const netQty = it.qty - (it.retQty||0);
+      const netRevenue = it.revenue - (it.retRevenue||0);
+      const reportCostPerUnit = it.avgCost!=null ? it.avgCost : (it.costSum!=null && it.qty>0 ? it.costSum/it.qty : null);
+      bySku[it.sku] = {
+        sku: it.sku, article: it.article, name: it.name, unit: it.unit,
+        qty: it.qty, netQty, revenue: it.revenue, netRevenue,
+        retQty: it.retQty||0, retRevenue: it.retRevenue||0,
+        reportCostPerUnit, reportCostSum: it.costSum,
+        reportRetCostSum: it.retCostSum||0,
+        commission: it.commission||0,
+        reportProfit: it.profit,
+        hasSalesThisPeriod: true,
+      };
+    }
+  }
+  if (stock && stock.rows){
+    for (const s of stock.rows){
+      if (!bySku[s.sku]){
+        bySku[s.sku] = {
+          sku:s.sku, article:s.article, name:s.name, unit:s.unit,
+          qty:0, netQty:0, revenue:0, netRevenue:0, retQty:0, retRevenue:0,
+          reportCostPerUnit:null, reportCostSum:null, reportRetCostSum:0, commission:0,
+          reportProfit:null, hasSalesThisPeriod:false,
+        };
+      }
+      bySku[s.sku].stockAvgCost = s.avgCost;
+      bySku[s.sku].stockBalance = s.balance;
+      bySku[s.sku].stockAvailable = s.available;
+      bySku[s.sku].stockDaysInStock = s.daysInStock;
+      if (!bySku[s.sku].unit) bySku[s.sku].unit = s.unit;
+      if (!bySku[s.sku].name) bySku[s.sku].name = s.name;
+    }
+  }
+
+  const products = Object.values(bySku).map(p=>{
+    const cost = resolveCost(p.sku, p.reportCostPerUnit, p.stockAvgCost);
+    const costKnown = cost.value!=null;
+    const costSum = costKnown ? (cost.source==='report' && p.reportCostSum!=null ? p.reportCostSum-(p.reportRetCostSum||0) : cost.value*p.netQty) : null;
+    const profit = costKnown ? (p.netRevenue - costSum) : null;
+    const margin = (profit!=null && p.netRevenue>0) ? profit/p.netRevenue : (p.netRevenue===0 && costKnown ? null : null);
+    const roi = (profit!=null && costSum>0) ? profit/costSum : null;
+    const category = state.categoryMap[p.sku] || 'Без категории';
+    return {
+      ...p, category,
+      costPerUnit: cost.value, costSource: cost.source, costKnown,
+      costSum, profit, margin, roi,
+      revenueShare: null, // считается ниже относительно суммы выручки
+    };
+  });
+
+  const totalRevenue = products.reduce((s,p)=>s+p.netRevenue,0);
+  products.forEach(p=> p.revenueShare = totalRevenue>0 ? p.netRevenue/totalRevenue : null);
+
+  // ABC по прибыли и отдельно по выручке (два независимых среза)
+  assignABC(products, 'netRevenue', 'abcRevenue');
+  assignABC(products.filter(p=>p.profit!=null), 'profit', 'abcProfit');
+  products.forEach(p=>{ if(p.profit==null) p.abcProfit = '—'; });
+
+  return products;
+}
+
+// Присваивает ABC-класс по накопительной доле выбранного показателя (только положительные значения)
+function assignABC(list, key, outKey){
+  const positive = list.filter(p=>p[key]>0).slice().sort((a,b)=>b[key]-a[key]);
+  const total = positive.reduce((s,p)=>s+p[key],0);
+  let cum = 0;
+  for (const p of positive){
+    const share = total>0 ? cum/total : 0;
+    cum += p[key];
+    p[outKey] = share<=0.8 ? 'A' : (share<=0.95 ? 'B' : 'C');
+  }
+  for (const p of list){ if (p[key]<=0) p[outKey] = p[outKey] || 'C'; }
+}
+
+function buildCategoryTable(products){
+  const map = {};
+  for (const p of products){
+    const c = p.category || 'Без категории';
+    if (!map[c]) map[c] = {category:c, count:0, revenue:0, profit:0, profitKnownCount:0};
+    map[c].count++;
+    map[c].revenue += p.netRevenue;
+    if (p.profit!=null){ map[c].profit += p.profit; map[c].profitKnownCount++; }
+  }
+  return Object.values(map).map(c=>({...c, margin: c.revenue>0? c.profit/c.revenue : null}))
+    .sort((a,b)=>b.revenue-a.revenue);
+}
+
+// Каналы продаж по отчёту покупателей.
+/* v2: buildChannels is provided by client-ui.js */
+function knownCostShare(products){
+  const totalRevenue = products.reduce((s,p)=>s+p.netRevenue,0);
+  const known = products.filter(p=>p.costKnown).reduce((s,p)=>s+p.netRevenue,0);
+  const manualRevenue = products.filter(p=>p.costSource==='manual').reduce((s,p)=>s+p.netRevenue,0);
+  const reportRevenue = products.filter(p=>p.costSource==='report'||p.costSource==='report-stock').reduce((s,p)=>s+p.netRevenue,0);
+  return {
+    knownShare: totalRevenue>0 ? known/totalRevenue : null,
+    manualShare: totalRevenue>0 ? manualRevenue/totalRevenue : null,
+    reportShare: totalRevenue>0 ? reportRevenue/totalRevenue : null,
+    unknownShare: totalRevenue>0 ? (totalRevenue-known)/totalRevenue : null,
+    unknownCount: products.filter(p=>!p.costKnown && p.hasSalesThisPeriod).length,
+  };
+}
+
+/* v2: computeKPI is provided by client-ui.js */
+function computeVelocityMap(){
+  const period = getCurrentPeriod();
+  const map = {};
+  if (!period) return {map, precise:false};
+  if (period.goodDetail && period.goodDetail.length){
+    const bySku = {};
+    for (const d of period.goodDetail){
+      const sign = (d.docType||'').toLowerCase().includes('возврат') ? -1 : 1;
+      bySku[d.sku] = (bySku[d.sku]||0) + sign*(d.qty||0);
+    }
+    const days = periodDays(period) || 30;
+    for (const sku in bySku) map[sku] = bySku[sku]/days;
+    return {map, precise:true};
+  }
+  if (period.goodSummary && period.goodSummary.length){
+    const days = periodDays(period) || 30;
+    for (const it of period.goodSummary) map[it.sku] = (it.qty-(it.retQty||0))/days;
+  }
+  return {map, precise:false};
+}
+
+// Таблица планирования остатков: сколько дней хватит, статус, рекомендация
+function computeStockPlanning(){
+  if (!state.stock || !state.stock.rows) return [];
+  const {map:velocity} = computeVelocityMap();
+  const products = state._productsCache || buildProducts();
+  const abcBySku = {}; products.forEach(p=>abcBySku[p.sku]=p.abcProfit);
+  const th = state.thresholds;
+
+  return state.stock.rows.map(s=>{
+    const v = velocity[s.sku];
+    let daysLeft=null, status, note='';
+    if (s.balance<=0){
+      daysLeft = 0; status='critical'; note = s.balance<0 ? 'остаток отрицательный' : 'товара нет в наличии';
+    } else if (v==null || v<=0){
+      status='unknown'; note='нет продаж за период — оценить скорость нельзя';
+    } else {
+      daysLeft = s.balance / v;
+      status = daysLeft < th.critical ? 'critical' : (daysLeft < th.warning ? 'warning' : 'ok');
+    }
+    let recommendation;
+    if (status==='critical') recommendation = 'пора поставлять';
+    else if (status==='unknown') recommendation = 'недостаточно данных для рекомендации';
+    else if (daysLeft!=null && daysLeft<14 && abcBySku[s.sku]!=='C') recommendation = 'пора поставлять';
+    else recommendation = 'в норме';
+    const etaDate = daysLeft!=null ? new Date(new Date(state.stock.updatedAt).getTime()+daysLeft*86400000) : null;
+    return {sku:s.sku, name:s.name, unit:s.unit, balance:s.balance, velocity:v, daysLeft, status, note, recommendation, etaDate};
+  }).sort((a,b)=>(a.daysLeft??999999)-(b.daysLeft??999999));
+}
+
+// Автоматические текстовые выводы для вкладки «Обзор»
+function computeInsights(products, categories, channels, stockPlanning){
+  const insights = [];
+  const period = getCurrentPeriod();
+
+  const lossy = products.filter(p=>p.profit!=null && p.profit<0);
+  if (lossy.length){
+    const sum = lossy.reduce((s,p)=>s+p.profit,0);
+    insights.push({level:'crit', text:`${lossy.length} товар(а/ов) продаются в убыток на сумму ${fmtRub(Math.abs(sum))} за период.`});
+  } else if (products.some(p=>p.profit!=null)) {
+    insights.push({level:'good', text:'Убыточных товаров за период не найдено.'});
+  }
+
+  if (categories.length>1){
+    const withMargin = categories.filter(c=>c.margin!=null);
+    if (withMargin.length){
+      const best = withMargin.reduce((a,b)=>a.margin>b.margin?a:b);
+      const worst = withMargin.reduce((a,b)=>a.margin<b.margin?a:b);
+      insights.push({level:'info', text:`Лучшая маржа у категории «${best.category}» (${fmtPct(best.margin)}), худшая — у «${worst.category}» (${fmtPct(worst.margin)}).`});
+    }
+  }
+
+  const soonOut = stockPlanning.filter(s=>s.daysLeft!=null && s.daysLeft < state.thresholds.warning);
+  if (soonOut.length){
+    insights.push({level:'warn', text:`${soonOut.length} товар(а/ов) закончится меньше чем через ${state.thresholds.warning} дней.`});
+  }
+
+  if (channels.length){
+    const withMargin = channels.filter(c=>c.margin!=null && c.revenue>0);
+    if (withMargin.length>1){
+      const best = withMargin.reduce((a,b)=>a.margin>b.margin?a:b);
+      const worst = withMargin.reduce((a,b)=>a.margin<b.margin?a:b);
+      insights.push({level:'info', text:`Лучший канал по марже — «${best.channel}» (${fmtPct(best.margin)}), худший — «${worst.channel}» (${fmtPct(worst.margin)}).`});
+    }
+  }
+
+  const candidatesOut = products.filter(p=>p.abcRevenue==='C' && p.profit!=null && p.profit<0);
+  if (candidatesOut.length){
+    insights.push({level:'warn', text:`${candidatesOut.length} товар(а/ов) одновременно в группе C по выручке и убыточны — кандидаты на вывод из ассортимента.`});
+  }
+
+  const cov = knownCostShare(products);
+  if (cov.unknownCount>0){
+    insights.push({level:'warn', text:`По ${cov.unknownCount} позициям нет данных о себестоимости — прибыль по ним не учтена в KPI. Введите себестоимость вручную во вкладке «Прибыль с единицы».`});
+  }
+
+  if (!period){
+    insights.push({level:'info', text:'Загрузите отчёты «Прибыльность» из Мой Склад, чтобы увидеть автовыводы.'});
+  }
+  return insights;
+}
+
+// Распределение остатков по срокам до обнуления — для гистограммы
+function stockHistogramBuckets(stockPlanning){
+  const buckets = [
+    {label:'до 7 дней', min:-Infinity, max:7, count:0},
+    {label:'7–14', min:7, max:14, count:0},
+    {label:'14–30', min:14, max:30, count:0},
+    {label:'30–60', min:30, max:60, count:0},
+    {label:'больше 60', min:60, max:Infinity, count:0},
+  ];
+  for (const s of stockPlanning){
+    if (s.daysLeft==null) continue;
+    for (const b of buckets){ if (s.daysLeft>=b.min && s.daysLeft<b.max){ b.count++; break; } }
+  }
+  return buckets;
+}
+
+/* ==================================================================================
+   6. CHARTS — обёртки над Chart.js. Палитра — фиксированная тёмная (см. CSS-переменные).
+   ================================================================================== */
+const CHART_COLORS = {s1:'#3987e5',s2:'#d95926',s3:'#199e70',s4:'#c98500',s5:'#d55181',s6:'#008300',s7:'#9085e9',s8:'#e66767',
+  good:'#0ca30c',warning:'#fab219',serious:'#ec835a',critical:'#d03b3b',
+  grid:'#2c2c2a', ink:'#c3c2b7', inkStrong:'#ffffff'};
+const chartRegistry = {};
+function destroyChart(id){ if (chartRegistry[id]){ chartRegistry[id].destroy(); delete chartRegistry[id]; } }
+const baseChartOptions = {
+  animation:false, responsive:true, maintainAspectRatio:false,
+  plugins:{ legend:{labels:{color:CHART_COLORS.ink, font:{size:11}}} },
+  scales:{
+    x:{ ticks:{color:CHART_COLORS.ink, font:{size:11}}, grid:{color:CHART_COLORS.grid} },
+    y:{ ticks:{color:CHART_COLORS.ink, font:{size:11}}, grid:{color:CHART_COLORS.grid} },
+  }
+};
+
+function renderWaterfall(canvasId, steps){
+  destroyChart(canvasId);
+  const el = document.getElementById(canvasId); if(!el) return;
+  let running=0; const data=[]; const colors=[]; const labels=[];
+  steps.forEach(s=>{
+    labels.push(s.label);
+    if (s.type==='start' || s.type==='end'){
+      data.push([0, s.value]); running = s.type==='start' ? s.value : running;
+      colors.push(CHART_COLORS.s1);
+    } else {
+      const from=running, to=running+s.value;
+      data.push([Math.min(from,to), Math.max(from,to)]);
+      running = to;
+      colors.push(s.value<0 ? CHART_COLORS.critical : CHART_COLORS.good);
+    }
+  });
+  chartRegistry[canvasId] = new Chart(el.getContext('2d'), {
+    type:'bar',
+    data:{labels, datasets:[{data, backgroundColor:colors, borderRadius:4, barPercentage:0.6}]},
+    options:{...baseChartOptions,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>{
+        const v = steps[ctx.dataIndex].value; return fmtRub(v);
+      }}}},
+      scales:{...baseChartOptions.scales, y:{...baseChartOptions.scales.y, ticks:{...baseChartOptions.scales.y.ticks, callback:v=>fmtNum(v)}}}
+    }
+  });
+}
+
+function renderDonut(canvasId, segments){ // [{label,value,color}]
+  destroyChart(canvasId);
+  const el = document.getElementById(canvasId); if(!el) return;
+  chartRegistry[canvasId] = new Chart(el.getContext('2d'), {
+    type:'doughnut',
+    data:{labels:segments.map(s=>s.label), datasets:[{data:segments.map(s=>s.value), backgroundColor:segments.map(s=>s.color), borderColor:CHART_COLORS.grid, borderWidth:2}]},
+    options:{animation:false, responsive:true, maintainAspectRatio:false, cutout:'62%',
+      plugins:{legend:{position:'right', labels:{color:CHART_COLORS.ink, font:{size:11}}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmtRub(ctx.raw)}`}}}}
+  });
+}
+
+function renderHistogram(canvasId, buckets){
+  destroyChart(canvasId);
+  const el = document.getElementById(canvasId); if(!el) return;
+  chartRegistry[canvasId] = new Chart(el.getContext('2d'), {
+    type:'bar',
+    data:{labels:buckets.map(b=>b.label), datasets:[{data:buckets.map(b=>b.count),
+      backgroundColor:[CHART_COLORS.critical,CHART_COLORS.warning,CHART_COLORS.s4,CHART_COLORS.s3,CHART_COLORS.good], borderRadius:4}]},
+    options:{...baseChartOptions, plugins:{legend:{display:false}}}
+  });
+}
+
+function renderTrend(canvasId, snapshots){
+  destroyChart(canvasId);
+  const el = document.getElementById(canvasId); if(!el) return;
+  chartRegistry[canvasId] = new Chart(el.getContext('2d'), {
+    type:'line',
+    data:{labels:snapshots.map(s=>s.periodLabel||fmtDate(new Date(s.ts))),
+      datasets:[
+        {label:'Выручка', data:snapshots.map(s=>s.revenue), borderColor:CHART_COLORS.s1, backgroundColor:CHART_COLORS.s1, tension:.25},
+        {label:'Прибыль', data:snapshots.map(s=>s.profit), borderColor:CHART_COLORS.s3, backgroundColor:CHART_COLORS.s3, tension:.25},
+      ]},
+    options:{...baseChartOptions, plugins:{legend:{labels:{color:CHART_COLORS.ink}}}}
+  });
+}
+
+/* ==================================================================================
+   7. RENDER
+   ================================================================================== */
+function setManualCost(sku, value){
+  if (value==null || isNaN(value) || value<0) delete state.manualCost[sku];
+  else state.manualCost[sku] = {value, updatedAt:Date.now()};
+  lsSet(LS.manualCost, state.manualCost);
+}
+function setCategory(sku, cat){
+  cat = (cat||'').trim();
+  if (!cat) delete state.categoryMap[sku]; else state.categoryMap[sku]=cat;
+  lsSet(LS.categoryMap, state.categoryMap);
+}
+function setChannel(customer, ch){
+  ch = (ch||'').trim();
+  if (!ch) delete state.channelMap[customer]; else state.channelMap[customer]=ch;
+  lsSet(LS.channelMap, state.channelMap);
+}
+
+function sortRows(rows, tableId, defaultKey, defaultDir){
+  const s = state.sortState[tableId] || {key:defaultKey, dir:defaultDir||'desc'};
+  state.sortState[tableId] = s;
+  return rows.slice().sort((a,b)=>{
+    let av=a[s.key], bv=b[s.key];
+    if (av==null && bv==null) return 0;
+    if (av==null) return 1; if (bv==null) return -1;
+    if (typeof av==='string') return s.dir==='asc'? av.localeCompare(bv,'ru') : bv.localeCompare(av,'ru');
+    return s.dir==='asc'? av-bv : bv-av;
+  });
+}
+function thSort(tableId, key, label, extraClass){
+  const s = state.sortState[tableId];
+  const active = s && s.key===key;
+  const arrow = active ? (s.dir==='asc'?' ▲':' ▼') : '';
+  return `<th data-table="${tableId}" data-key="${key}" class="${active?'sorted':''} ${extraClass||''}">${label}${arrow}</th>`;
+}
+function bindSortHeaders(root){
+  root.querySelectorAll('th[data-key]').forEach(th=>{
+    th.onclick = ()=>{
+      const tableId = th.dataset.table, key = th.dataset.key;
+      const cur = state.sortState[tableId] || {};
+      const dir = (cur.key===key && cur.dir==='desc') ? 'asc' : 'desc';
+      state.sortState[tableId] = {key, dir};
+      recalcAndRender(true);
+    };
+  });
+}
+
+function costBadge(source){
+  if (source==='manual') return '<span class="srcTag manual">вручную</span>';
+  if (source==='report') return '<span class="srcTag report">из отчёта</span>';
+  if (source==='report-stock') return '<span class="srcTag report">из отчёта (Остатки)</span>';
+  return '<span class="srcTag none">нет данных</span>';
+}
+function abcBadge(cls){
+  const map = {A:'good',B:'warn',C:'muted'};
+  return cls && cls!=='—' ? `<span class="badge ${map[cls]||'muted'}">${cls}</span>` : '<span class="muted">—</span>';
+}
+
+function renderUploadErrors(errors){
+  const el = document.getElementById('uploadErrors');
+  if (!errors || !errors.length){ el.innerHTML=''; return; }
+  el.innerHTML = errors.map(e=>`<div class="errBox">⚠️ ${escapeHtml(e)}</div>`).join('');
+}
+
+function renderPeriodSelect(){
+  const sel = document.getElementById('periodSelect');
+  const keys = Object.keys(state.periods);
+  if (!keys.length){
+    sel.innerHTML = '<option value="">нет загруженных периодов</option>';
+    document.getElementById('periodInfo').textContent = '';
+    return;
+  }
+  keys.sort((a,b)=>{
+    const pa=state.periods[a], pb=state.periods[b];
+    return (pb.start?pb.start.getTime():0) - (pa.start?pa.start.getTime():0);
+  });
+  if (!state.currentPeriodKey || !state.periods[state.currentPeriodKey]) state.currentPeriodKey = keys[0];
+  sel.innerHTML = keys.map(k=>`<option value="${escapeHtml(k)}" ${k===state.currentPeriodKey?'selected':''}>${escapeHtml(state.periods[k].label)}</option>`).join('');
+  const p = state.periods[state.currentPeriodKey];
+  const days = periodDays(p);
+  document.getElementById('periodInfo').textContent = days ? `(${days} дн.)` : '';
+}
+
+/* v2: renderKPIRow is provided by client-ui.js */
+/* v2: renderOverview is provided by client-ui.js */
+/* v2: renderPlanFact is provided by client-ui.js */
+function applyProductFilters(products, filterKey){
+  const f = state.filterState[filterKey] || {};
+  let list = products;
+  if (f.search){
+    const q = f.search.toLowerCase();
+    list = list.filter(p=>(p.name||'').toLowerCase().includes(q) || (p.sku||'').toLowerCase().includes(q) || (p.article||'').toLowerCase().includes(q));
+  }
+  if (f.category) list = list.filter(p=>p.category===f.category);
+  if (f.issue==='loss') list=list.filter(p=>p.profit!=null&&p.profit<0);
+  if (f.issue==='missing') list=list.filter(p=>!p.costKnown&&p.hasSalesThisPeriod);
+  if (f.costStatus) list = list.filter(p=>p.costSource===f.costStatus || (f.costStatus==='none' && !p.costKnown));
+  return list;
+}
+function categoryOptions(products){
+  return Array.from(new Set(products.map(p=>p.category))).sort((a,b)=>a.localeCompare(b,'ru'));
+}
+function filterControlsHtml(filterKey, products, extra){
+  const f = state.filterState[filterKey] || {};
+  const cats = categoryOptions(products);
+  return `<div class="filtersRow">
+    <input type="text" id="${filterKey}_search" placeholder="Поиск по названию/артикулу" value="${escapeHtml(f.search||'')}" style="width:220px;">
+    <select id="${filterKey}_cat"><option value="">Все категории</option>${cats.map(c=>`<option value="${escapeHtml(c)}" ${f.category===c?'selected':''}>${escapeHtml(c)}</option>`).join('')}</select>
+    ${extra||''}
+  </div>`;
+}
+function bindFilterControls(filterKey){
+  const s = document.getElementById(filterKey+'_search');
+  const c = document.getElementById(filterKey+'_cat');
+  if (s) s.oninput = debounce(e=>{ state.filterState[filterKey] = {...state.filterState[filterKey], search:e.target.value}; recalcAndRender(true); }, 250);
+  if (c) c.onchange = e=>{ state.filterState[filterKey] = {...state.filterState[filterKey], category:e.target.value}; recalcAndRender(true); };
+  const cs = document.getElementById(filterKey+'_costStatus');
+  if (cs) cs.onchange = e=>{ state.filterState[filterKey] = {...state.filterState[filterKey], costStatus:e.target.value}; recalcAndRender(true); };
+}
+
+function renderUnitEconomics(products){
+  const el = document.getElementById('tab-unit');
+  if (!products.length){ el.innerHTML = `<div class="emptyState">Загрузите отчёт «Прибыльность по товарам», чтобы увидеть юнит-экономику.</div>`; return; }
+
+  const withCost = products.filter(p=>p.costKnown);
+  const positive = withCost.filter(p=>p.profit>0);
+  const missing = products.filter(p=>!p.costKnown);
+  const avgMargin = computeKPI(products,[]).margin;
+  const avgROI = computeKPI(products,[]).roi;
+
+  const costStatusExtra = `<select id="unit_costStatus"><option value="">Любая себестоимость</option>
+    <option value="report" ${state.filterState.unit?.costStatus==='report'?'selected':''}>Из отчёта</option>
+    <option value="manual" ${state.filterState.unit?.costStatus==='manual'?'selected':''}>Вручную</option>
+    <option value="none" ${state.filterState.unit?.costStatus==='none'?'selected':''}>Не заполнено</option></select>`;
+
+  let list = applyProductFilters(products, 'unit');
+  list = sortRows(list, 'unitTable', 'netRevenue', 'desc');
+
+  el.innerHTML = `
+    <div class="grid3">
+      <div class="card"><div class="small muted">Валовая маржа всех продаж</div><div class="val nums">${fmtPct(avgMargin)}</div></div>
+      <div class="card"><div class="small muted">Прибыль к себестоимости всех продаж</div><div class="val nums">${fmtPct(avgROI)}</div></div>
+      <div class="card"><div class="small muted">Доля товаров с известной себестоимостью</div><div class="val nums">${fmtPct(products.length? withCost.length/products.length : null,0)}</div>
+        <div class="sub">${withCost.length} из ${products.length}, из них с прибылью > 0: ${positive.length}</div></div>
+    </div>
+    ${missing.length ? `<div class="card">
+      <h2>⚠️ Нет данных о себестоимости (${missing.length})</h2>
+      <div class="tableScroll"><table><thead><tr><th>Код</th><th>Наименование</th><th class="right">Выручка</th><th>Себестоимость, ₽/ед.</th></tr></thead>
+      <tbody>${missing.map(p=>`<tr><td>${escapeHtml(p.sku)}</td><td>${escapeHtml(p.name)}</td><td class="right nums">${fmtRub(p.netRevenue)}</td>
+        <td><input type="number" class="inlineInput costInput" data-sku="${escapeHtml(p.sku)}" placeholder="ввести ₽"></td></tr>`).join('')}</tbody></table></div>
+    </div>` : ''}
+    <div class="card">
+      <h2>Прибыль с единицы товара</h2>
+      ${filterControlsHtml('unit', products, costStatusExtra)}
+      <div class="tableScroll"><table>
+        <thead><tr>
+          ${thSort('unitTable','name','Товар')}
+          <th>Категория</th>
+          ${thSort('unitTable','netQty','Кол-во','right')}
+          ${thSort('unitTable','avgPriceCalc','Цена','right')}
+          <th>Себестоимость/ед.</th>
+          ${thSort('unitTable','profitPerUnit','Прибыль/ед.','right')}
+          ${thSort('unitTable','margin','Маржа','right')}
+          ${thSort('unitTable','roi','ROI','right')}
+        </tr></thead>
+        <tbody>${list.map(p=>{
+          const avgPriceCalc = p.netQty>0 ? p.netRevenue/p.netQty : null;
+          const profitPerUnit = (p.profit!=null && p.netQty>0) ? p.profit/p.netQty : null;
+          return `<tr>
+            <td>${escapeHtml(p.name)}<div class="small muted">${escapeHtml(p.sku)}</div></td>
+            <td><input type="text" class="inlineInput catInput" style="width:110px;" data-sku="${escapeHtml(p.sku)}" value="${escapeHtml(p.category==='Без категории'?'':p.category)}" placeholder="Без категории"></td>
+            <td class="right nums">${fmtNum(p.netQty)} ${escapeHtml(p.unit)}</td>
+            <td class="right nums">${fmtRub(avgPriceCalc)}</td>
+            <td class="nums">${fmtRub(p.costPerUnit)} ${costBadge(p.costSource)}
+              <div><input type="number" class="inlineInput costInput" data-sku="${escapeHtml(p.sku)}" value="${p.costSource==='manual'?p.costPerUnit:''}" placeholder="изменить"></div></td>
+            <td class="right nums">${fmtRub(profitPerUnit)}</td>
+            <td class="right nums">${fmtPct(p.margin)}</td>
+            <td class="right nums">${fmtPct(p.roi)}</td>
+          </tr>`;
+        }).join('') || '<tr><td colspan="8" class="muted">Ничего не найдено</td></tr>'}</tbody>
+      </table></div>
+    </div>
+  `;
+  bindSortHeaders(el); bindFilterControls('unit');
+  el.querySelectorAll('.costInput').forEach(inp=>{
+    inp.onchange = e=>{ setManualCost(e.target.dataset.sku, num(e.target.value)); recalcAndRender(true); };
+  });
+  el.querySelectorAll('.catInput').forEach(inp=>{
+    inp.onchange = e=>{ setCategory(e.target.dataset.sku, e.target.value); recalcAndRender(true); };
+  });
+}
+
+function renderProducts(products, stockPlanning){
+  const el = document.getElementById('tab-products');
+  if (!products.length){ el.innerHTML = `<div class="emptyState">Загрузите отчёт «Прибыльность по товарам», чтобы увидеть таблицу товаров.</div>`; return; }
+  const stockBySku = {}; stockPlanning.forEach(s=>stockBySku[s.sku]=s);
+
+  let list = applyProductFilters(products, 'products');
+  list = sortRows(list, 'productsTable', 'netRevenue', 'desc');
+
+  el.innerHTML = `
+    <div class="card">
+      <h2>Товары</h2>
+      ${filterControlsHtml('products', products)}
+      <div class="tableScroll"><table>
+        <thead><tr>
+          <th></th>
+          ${thSort('productsTable','name','Товар')}
+          ${thSort('productsTable','netQty','Кол-во','right')}
+          ${thSort('productsTable','netRevenue','Выручка','right')}
+          <th>Себестоимость/ед.</th>
+          ${thSort('productsTable','profit','Прибыль','right')}
+          ${thSort('productsTable','margin','Маржа','right')}
+          ${thSort('productsTable','roi','ROI','right')}
+          ${thSort('productsTable','revenueShare','Доля выручки','right')}
+          <th>ABC выручка</th><th>ABC прибыль</th>
+        </tr></thead>
+        <tbody>${list.map(p=>{
+          const st = stockBySku[p.sku];
+          return `<tr class="prodRow" data-sku="${escapeHtml(p.sku)}">
+            <td><button class="btn small secondary expandBtn" data-sku="${escapeHtml(p.sku)}">▸</button></td>
+            <td>${escapeHtml(p.name)}<div class="small muted">${escapeHtml(p.sku)} · ${escapeHtml(p.category)}</div></td>
+            <td class="right nums">${fmtNum(p.netQty)} ${escapeHtml(p.unit)}</td>
+            <td class="right nums">${fmtRub(p.netRevenue)}</td>
+            <td class="nums">${fmtRub(p.costPerUnit)} ${costBadge(p.costSource)}</td>
+            <td class="right nums">${fmtRub(p.profit)}</td>
+            <td class="right nums">${fmtPct(p.margin)}</td>
+            <td class="right nums">${fmtPct(p.roi)}</td>
+            <td class="right nums">${fmtPct(p.revenueShare)}</td>
+            <td class="center">${abcBadge(p.abcRevenue)}</td>
+            <td class="center">${abcBadge(p.abcProfit)}</td>
+          </tr>
+          <tr class="expandRow" data-sku-row="${escapeHtml(p.sku)}" style="display:none;"><td colspan="11">
+            <div class="expandBox">
+              <div class="grid3">
+                <div>
+                  <b>Нитка прибыли</b>
+                  <div class="small">Выручка ${fmtRub(p.netRevenue)} → себестоимость ${fmtRub(p.costSum)} → прибыль ${fmtRub(p.profit)}</div>
+                </div>
+                <div>
+                  <b>Остаток и скорость продаж</b>
+                  <div class="small">Остаток: ${st? fmtNum(st.balance)+' '+escapeHtml(st.unit) : 'нет данных'}<br>
+                  Скорость: ${st && st.velocity!=null ? fmtNum(st.velocity,2)+' шт/день' : 'нет данных'}<br>
+                  Хватит на: ${st && st.daysLeft!=null ? fmtNum(st.daysLeft,0)+' дн. (до ~'+fmtDate(st.etaDate)+')' : 'н/д'}</div>
+                </div>
+                <div>
+                  <b>Рекомендация</b>
+                  <div class="small">${st ? escapeHtml(st.recommendation) : 'нет данных по остаткам'}</div>
+                  <div class="footnote">Данных по воронке продаж (показы/визиты/корзина) в Мой Склад нет.</div>
+                </div>
+              </div>
+            </div>
+          </td></tr>`;
+        }).join('')}</tbody>
+      </table></div>
+    </div>
+  `;
+  bindSortHeaders(el); bindFilterControls('products');
+  el.querySelectorAll('.expandBtn').forEach(b=>{
+    b.onclick = ()=>{
+      const row = el.querySelector(`.expandRow[data-sku-row="${b.dataset.sku}"]`);
+      const open = row.style.display!=='none';
+      row.style.display = open?'none':'table-row';
+      b.textContent = open?'▸':'▾';
+    };
+  });
+}
+
+/* v2: renderChannels is provided by client-ui.js */
+function renderStock(stockPlanning){
+  const el = document.getElementById('tab-stock');
+  if (!state.stock || !state.stock.rows || !state.stock.rows.length){
+    el.innerHTML = `<div class="emptyState">Загрузите отчёт «Остатки» из Мой Склад.</div>`;
+    return;
+  }
+  const th = state.thresholds;
+  const critical = stockPlanning.filter(s=>s.status==='critical').length;
+  const warning = stockPlanning.filter(s=>s.status==='warning').length;
+  const ok = stockPlanning.filter(s=>s.status==='ok').length;
+  const buckets = stockHistogramBuckets(stockPlanning);
+  const nearZero = stockPlanning.filter(s=>s.daysLeft!=null).sort((a,b)=>a.daysLeft-b.daysLeft).slice(0,10);
+
+  let list = sortRows(stockPlanning, 'stockTable', 'daysLeft', 'asc');
+
+  el.innerHTML = `
+    <div class="grid3">
+      <div class="card"><div class="small muted">Критично (&lt; ${th.critical} дн.)</div><div class="val nums" style="color:var(--critical);">${critical}</div></div>
+      <div class="card"><div class="small muted">Требуют внимания (&lt; ${th.warning} дн.)</div><div class="val nums" style="color:var(--warning);">${warning}</div></div>
+      <div class="card"><div class="small muted">В норме</div><div class="val nums" style="color:var(--good);">${ok}</div></div>
+    </div>
+    <div class="card">
+      <div class="filtersRow">
+        <label>Порог «критично», дней: <input type="number" id="thCritical" class="inlineInput" style="width:70px;" value="${th.critical}"></label>
+        <label>Порог «внимание», дней: <input type="number" id="thWarning" class="inlineInput" style="width:70px;" value="${th.warning}"></label>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h2>Распределение по срокам до обнуления</h2><div style="height:220px;"><canvas id="stockHist"></canvas></div></div>
+      <div class="card"><h2>Ближайшие к обнулению</h2>
+        <table><tbody>${nearZero.map(s=>`<tr><td>${escapeHtml(s.name)}</td><td class="right nums">${fmtNum(s.daysLeft,0)} дн.</td><td class="small muted">${s.etaDate?fmtDate(s.etaDate):''}</td></tr>`).join('')||'<tr><td class="muted">нет данных</td></tr>'}</tbody></table>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Планирование поставок</h2>
+      <div class="tableScroll"><table>
+        <thead><tr>
+          ${thSort('stockTable','name','Товар')}
+          ${thSort('stockTable','balance','Остаток','right')}
+          ${thSort('stockTable','velocity','Скорость, шт/день','right')}
+          ${thSort('stockTable','daysLeft','Хватит дней','right')}
+          <th>Статус</th><th>Рекомендация</th>
+        </tr></thead>
+        <tbody>${list.map(s=>{
+          const statusBadge = s.status==='critical'?'<span class="badge crit">критично</span>'
+            : s.status==='warning'?'<span class="badge warn">внимание</span>'
+            : s.status==='ok'?'<span class="badge good">в норме</span>'
+            : '<span class="badge muted">нет данных</span>';
+          return `<tr><td>${escapeHtml(s.name)}<div class="small muted">${escapeHtml(s.sku)} ${s.note?'· '+escapeHtml(s.note):''}</div></td>
+            <td class="right nums">${fmtNum(s.balance)} ${escapeHtml(s.unit)}</td>
+            <td class="right nums">${s.velocity!=null?fmtNum(s.velocity,2):'—'}</td>
+            <td class="right nums">${s.daysLeft!=null?fmtNum(s.daysLeft,0):'—'}</td>
+            <td>${statusBadge}</td><td class="small">${escapeHtml(s.recommendation)}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>
+    </div>
+  `;
+  bindSortHeaders(el);
+  renderHistogram('stockHist', buckets);
+  document.getElementById('thCritical').onchange = e=>{ state.thresholds.critical = num(e.target.value)||7; lsSet(LS.thresholds, state.thresholds); recalcAndRender(true); };
+  document.getElementById('thWarning').onchange = e=>{ state.thresholds.warning = num(e.target.value)||14; lsSet(LS.thresholds, state.thresholds); recalcAndRender(true); };
+}
+
+/* ---------------- ОРКЕСТРАТОР: полный пересчёт всех вкладок ---------------- */
+function recalcAndRender(skipPeriodSelect){
+  if (!skipPeriodSelect) renderPeriodSelect();
+  const products = buildProducts();
+  state._productsCache = products;
+  const stockPlanning = computeStockPlanning();
+  const categories = buildCategoryTable(products);
+  const channels = buildChannels();
+  const kpi = computeKPI(products, stockPlanning);
+  const insights = computeInsights(products, categories, channels, stockPlanning);
+
+  // Каждая вкладка рендерится независимо: ошибка в одной (например, в графике)
+  // не должна блокировать отрисовку остальных вкладок.
+  const safe = (fn, label) => { try{ fn(); }catch(e){ console.error('Ошибка рендера «'+label+'»:', e); } };
+  safe(()=>renderKPIRow(kpi, products), 'KPI');
+  safe(()=>renderOverview(products, categories, channels, stockPlanning, insights, kpi), 'Обзор');
+  safe(()=>renderPlanFact(kpi, products), 'План-факт');
+  safe(()=>renderUnitEconomics(products), 'Прибыль с единицы');
+  safe(()=>renderProducts(products, stockPlanning), 'Товары');
+  safe(()=>renderChannels(channels, kpi.period), 'Каналы');
+  safe(()=>renderStock(stockPlanning), 'Остатки');
+
+  const cov = knownCostShare(products);
+  document.getElementById('dataCoverage').textContent = products.length
+    ? `Себестоимость известна по ${fmtPct(cov.knownShare,0)} выручки`
+    : '';
+}
+
+/* ==================================================================================
+   8. EVENTS / INIT
+   ================================================================================== */
+function switchTab(tabId){
+  state.activeTab = tabId;
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===tabId));
+  document.querySelectorAll('.tabpanel').forEach(p=>p.classList.toggle('active', p.id==='tab-'+tabId));
+}
+
+function initEvents(){
+  document.querySelectorAll('nav.tabs button').forEach(b=>{
+    b.addEventListener('click', ()=>switchTab(b.dataset.tab));
+  });
+
+  const zone = document.getElementById('uploadZone');
+  const input = document.getElementById('fileInput');
+  zone.addEventListener('click', ()=>input.click());
+  input.addEventListener('change', e=>{ handleFiles(e.target.files); input.value=''; });
+  ['dragenter','dragover'].forEach(ev=>zone.addEventListener(ev, e=>{ e.preventDefault(); zone.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(ev=>zone.addEventListener(ev, e=>{ e.preventDefault(); zone.classList.remove('drag'); }));
+  zone.addEventListener('drop', e=>{ if(e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
+
+  document.getElementById('periodSelect').addEventListener('change', e=>{
+    state.currentPeriodKey = e.target.value;
+    recalcAndRender(true);
+  });
+
+  document.getElementById('snapshotBtn').addEventListener('click', ()=>{
+    const period = getCurrentPeriod();
+    if (!period){ renderUploadErrors(['Нечего сохранять — сначала загрузите отчёты за период.']); return; }
+    const products = state._productsCache || buildProducts();
+    const stockPlanning = computeStockPlanning();
+    const kpi = computeKPI(products, stockPlanning);
+    state.snapshots.push({ts:Date.now(), periodLabel:period.label, revenue:kpi.revenue, profit:kpi.profit, margin:kpi.margin});
+    lsSet(LS.snapshots, state.snapshots);
+    recalcAndRender(true);
+  });
+}
+
+async function handleFiles(fileList){
+  const files = Array.from(fileList).filter(f=>/\.(xls|xlsx)$/i.test(f.name));
+  if (!files.length){ renderUploadErrors(['Не нашла файлов .xls/.xlsx среди выбранных.']); return; }
+  renderUploadErrors([]);
+  document.getElementById('uploadIcon').textContent = '⏳';
+  try{
+    await ingestFiles(files);
+  }catch(e){
+    renderUploadErrors(['Не удалось обработать файлы: ' + (e.message||String(e))]);
+  }finally{
+    document.getElementById('uploadIcon').textContent = '📁';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  initEvents();
+  initDemo();
+});
+</script>
+<script src="client-ui.js"></script><script src="demo.js"></script></body>
+</html>
